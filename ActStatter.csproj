@@ -1,0 +1,127 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{6BD4F331-2DB3-445C-A475-FBD18B4F0451}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ACT_Plugin</RootNamespace>
+    <AssemblyName>ActStatter</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Advanced Combat Tracker, Version=3.5.0.273, Culture=neutral, PublicKeyToken=a946b61e93d97868, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\EQ2\ACT\Advanced Combat Tracker.exe</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="UI\StatterAddStatForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\StatterAddStatForm.Designer.cs">
+      <DependentUpon>StatterAddStatForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Model\StatterEncounterStat.cs" />
+    <Compile Include="UI\StatterFastDataGrid.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="StatterSettings.cs" />
+    <Compile Include="Model\StatterStat.cs" />
+    <Compile Include="UI\StatterStatDetailsPanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\StatterStatDetailsPanel.Designer.cs">
+      <DependentUpon>StatterStatDetailsPanel.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\StatterStatGraph.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\StatterStatGraph.Designer.cs">
+      <DependentUpon>StatterStatGraph.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Model\StatterStatReading.cs" />
+    <Compile Include="StatterMain.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UI\StatterPluginTab.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\StatterPluginTab.Designer.cs">
+      <DependentUpon>StatterPluginTab.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\StatterViewStatsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\StatterViewStatsForm.Designer.cs">
+      <DependentUpon>StatterViewStatsForm.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="UI\StatterAddStatForm.resx">
+      <DependentUpon>StatterAddStatForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\StatterStatDetailsPanel.resx">
+      <DependentUpon>StatterStatDetailsPanel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\StatterStatGraph.resx">
+      <DependentUpon>StatterStatGraph.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\StatterPluginTab.resx">
+      <DependentUpon>StatterPluginTab.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\StatterViewStatsForm.resx">
+      <DependentUpon>StatterViewStatsForm.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include=".gitignore" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="View\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
