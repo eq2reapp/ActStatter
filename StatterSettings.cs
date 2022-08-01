@@ -54,6 +54,22 @@ namespace ACT_Plugin
             doc.Save(_settingsFile);
         }
 
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("Settings:");
+            sb.AppendLine("  ParseOnImport = " + ParseOnImport);
+            sb.AppendLine("  StepLines = " + StepLines);
+            List<string> _trackedStats = new List<string>();
+            foreach (StatterStat stat in Stats)
+            {
+                _trackedStats.Add(stat.Name);
+            }
+            sb.Append("  Stats = [" + string.Join(", ", _trackedStats.ToArray()) + "]");
+
+            return sb.ToString();
+        }
+
         private T RetrieveSetting<T>(XmlNode attachPoint, string name)
         {
             T settingVal = default(T);

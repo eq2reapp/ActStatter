@@ -325,30 +325,19 @@ namespace ACT_Plugin.UI
             _minVal = double.MaxValue;
             _maxVal = double.MinValue;
             foreach (StatterEncounterStat stat in _stats)
+            {
                 if (stat.Readings.Count > 0)
                 {
                     if (stat.MinReading.Value < _minVal) _minVal = stat.MinReading.Value;
                     if (stat.MaxReading.Value > _maxVal) _maxVal = stat.MaxReading.Value;
                 }
+            }
             _valueSpread = _minVal == double.MaxValue ? 0 : _maxVal - _minVal;
 
             // Now calculate the average value if that concept applies
             if (stats.Count == 1 && stats[0].Readings.Count > 1 && _totalSeconds > 0)
             {
-                double sum = 0;
-
-                // Add value from start of fight until first reading - since we don't know what 
-                // the value was prior to the first reading, use the first reading
-                sum += (stats[0].Readings[0].Time - startTime).TotalSeconds * stats[0].Readings[0].Value;
-
-                // Now add all intermediary values
-                for (int i = 1; i < stats[0].Readings.Count; i++)
-                    sum += (stats[0].Readings[i].Time - stats[0].Readings[i - 1].Time).TotalSeconds * stats[0].Readings[i - 1].Value;
-
-                // Finally, add the value after the last reading, up until the end of the encounter
-                sum += (endTime - stats[0].Readings[stats[0].Readings.Count - 1].Time ).TotalSeconds * stats[0].Readings[stats[0].Readings.Count - 1].Value;
-
-                _valueAverage = sum / _totalSeconds;
+                _valueAverage = stats[0].AvgReading.Value;
             }
             else
                 _valueAverage = -1;

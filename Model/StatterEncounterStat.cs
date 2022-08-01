@@ -8,5 +8,6 @@ namespace ACT_Plugin.Model
         public List<StatterStatReading> Readings { get; set; }
         public StatterStatReading MinReading { get; set; }
         public StatterStatReading MaxReading { get; set; }
+        public StatterStatReading AvgReading { get; set; }
     }
 }

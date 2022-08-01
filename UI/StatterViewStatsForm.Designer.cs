@@ -28,12 +28,12 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.dgStats = new StatterFastDataGrid();
+            this.dgStats = new ACT_Plugin.UI.StatterFastDataGrid();
             this.ColStat = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColMin = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColMax = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.pnlGraph = new System.Windows.Forms.Panel();
-            this.statGraph = new StatterStatGraph();
+            this.statGraph = new ACT_Plugin.UI.StatterStatGraph();
             this.pnlGraphControls = new System.Windows.Forms.Panel();
             ((System.ComponentModel.ISupportInitialize)(this.dgStats)).BeginInit();
             this.pnlGraph.SuspendLayout();
@@ -45,7 +45,7 @@
             this.dgStats.AllowUserToDeleteRows = false;
             this.dgStats.AllowUserToResizeColumns = false;
             this.dgStats.AllowUserToResizeRows = false;
-            this.dgStats.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            this.dgStats.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
             this.dgStats.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.dgStats.BackgroundColor = System.Drawing.SystemColors.Window;
@@ -101,8 +101,8 @@
             // 
             // pnlGraph
             // 
-            this.pnlGraph.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.pnlGraph.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.pnlGraph.Controls.Add(this.statGraph);
             this.pnlGraph.Controls.Add(this.pnlGraphControls);
@@ -130,17 +130,17 @@
             this.pnlGraphControls.Size = new System.Drawing.Size(764, 0);
             this.pnlGraphControls.TabIndex = 0;
             // 
-            // DlgViewStats
+            // StatterViewStatsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1054, 710);
             this.Controls.Add(this.pnlGraph);
             this.Controls.Add(this.dgStats);
-            this.Name = "DlgViewStats";
+            this.Name = "StatterViewStatsForm";
             this.ShowIcon = false;
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "View Stats";
             this.Load += new System.EventHandler(this.ViewStats_Load);
             ((System.ComponentModel.ISupportInitialize)(this.dgStats)).EndInit();

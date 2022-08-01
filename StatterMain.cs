@@ -9,6 +9,7 @@ using System.IO;
 using Advanced_Combat_Tracker;
 using ACT_Plugin.UI;
 using ACT_Plugin.Model;
+using System.Reflection;
 
 namespace ACT_Plugin
 {
@@ -41,6 +42,9 @@ namespace ACT_Plugin
             ReadingStats
         }
 
+        // Keep a log handy for debugging
+        private List<String> Logs = new List<string>();
+
         // These elements are given to us by the plugin engine
         private TabPage _pluginScreenSpace = null;
         private Label _pluginStatusText = null;
@@ -70,17 +74,31 @@ namespace ACT_Plugin
             _timerDelayedAttach.Tick += new EventHandler(timerDelayedAttach_Tick);
         }
 
+        public void Log(string message)
+        {
+            Logs.Add(String.Format("[{0}] {1}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), message));
+        }
+
+        public String[] GetLogs()
+        {
+            return Logs.ToArray();
+        }
+
         // The entry-point from the ACT plugin engine, called when the plugin is loaded
         public void InitPlugin(TabPage pluginScreenSpace, Label pluginStatusText)
         {
             try
             {
+                Log("Initializing plugin");
+                Log("Version = " + GetType().Assembly.GetName().Version);
+
                 _pluginScreenSpace = pluginScreenSpace;
                 _pluginStatusText = pluginStatusText;
 
                 _settings.Load();
+                Log(_settings.ToString());
 
-                _ui = new StatterPluginTab(_settings);
+                _ui = new StatterPluginTab(this, _settings);
                 _ui.SelectedStatsChanged += new Action(selectedStatsChanged);
                 _ui.Dock = DockStyle.Fill;
                 _pluginScreenSpace.Controls.Add(_ui);
@@ -97,19 +115,30 @@ namespace ACT_Plugin
 
                 ShowPluginStatus(true);
             }
-            catch {}
+            catch (Exception ex)
+            {
+                Log(ex.Message);
+            }
         }
 
         // The exit-point from the ACT plugin engine, called when the plugin is unloaded
         public void DeInitPlugin()
         {
+            Log("Deinitializing plugin");
             try
             {
                 DettachFromActForm();
 
                 ShowPluginStatus(false);
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Log(ex.Message);
+            }
+            finally
+            {
+                Log("Deinitialized plugin");
+            }
         }
 
         private void AttachToActForm()
@@ -131,6 +160,8 @@ namespace ACT_Plugin
 
                     _tsEncounterShowStats = _menuEncounter.Items.Add(ACTFORM_ENCOUNTER_TREEVIEW_MENU_OPTION);
                     _tsEncounterShowStats.Click += new EventHandler(tsEncounterShowStats_Click);
+
+                    Log("Attached to tree");
                 }
             }
         }
@@ -148,6 +179,8 @@ namespace ACT_Plugin
                 {
                     _tsEncounterShowStats.Click -= tsEncounterShowStats_Click;
                     _menuEncounter.Items.Remove(_tsEncounterShowStats);
+
+                    Log("Detached from tree");
                 }
             }
         }
@@ -189,6 +222,7 @@ namespace ACT_Plugin
                     {
                         _parseState = ParseState.ReadingStats;
                         _statIdx = 0;
+                        Log("Parsing stats");
                     }
                     break;
 
@@ -247,7 +281,7 @@ namespace ACT_Plugin
         {
             EncounterData encounterData = GetSelectedEncounter();
             if (encounterData != null)
-                ShowStatDialog();
+                ShowStatDialog(encounterData);
         }
 
         // Launch a dialog box with enounter stats
@@ -275,6 +309,8 @@ namespace ACT_Plugin
             CreateMacroFile();
 
             ShowPluginStatus(true);
+
+            Log(_settings.ToString());
         }
 
         // Helper funtion to search a control tree and return the control with the given name
@@ -311,8 +347,13 @@ namespace ACT_Plugin
                 try
                 {
                     ActGlobals.oFormActMain.SendToMacroFile(MACRO_FILENAME, sb.ToString(), "");
+                    Log("Wrote macro file: " + Path.Combine(ActGlobals.oFormActMain.GameMacroFolder, MACRO_FILENAME));
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Log("Failed to write macro file: " + Path.Combine(ActGlobals.oFormActMain.GameMacroFolder, MACRO_FILENAME));
+                    Log(ex.Message);
+                }
             }
         }
 
@@ -336,8 +377,13 @@ namespace ACT_Plugin
                     try
                     {
                         encounterData = ActGlobals.oFormActMain.ZoneList[zoneId].Items[encounterId];
+                        Log("Found encounter data: " + encounterData.Title);
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        Log("Failed to find encounter data");
+                        Log(ex.Message);
+                    }
                 }
             }
 
@@ -352,13 +398,21 @@ namespace ACT_Plugin
                 _pluginStatusText.Text = "Disabled";
         }
 
-        private void ShowStatDialog()
+        private void ShowStatDialog(EncounterData encounterData = null)
         {
-            EncounterData encounterData = GetSelectedEncounter();
+            if (encounterData == null)
+            {
+                encounterData = GetSelectedEncounter();
+            }
             if (encounterData != null)
             {
-                var dlgViewStats = new StatterViewStatsForm(_settings);
+                Log("Showing encounter data");
+                var dlgViewStats = new StatterViewStatsForm(this, _settings);
                 dlgViewStats.ShowStats(_settings.Stats, encounterData);
+            }
+            else
+            {
+                Log("No encounter data");
             }
         }
     }

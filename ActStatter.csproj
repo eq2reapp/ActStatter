@@ -108,6 +108,7 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <Content Include=".gitattributes" />
     <Content Include=".gitignore" />
   </ItemGroup>
   <ItemGroup>

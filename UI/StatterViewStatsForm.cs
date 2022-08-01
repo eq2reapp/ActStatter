@@ -13,12 +13,14 @@ namespace ACT_Plugin.UI
         private DateTime _start = DateTime.MinValue;
         private DateTime _end = DateTime.MinValue;
         private string _title = "";
+        private StatterMain _statter = null;
         private StatterSettings _settings = null;
 
-        public StatterViewStatsForm(StatterSettings settings)
+        public StatterViewStatsForm(StatterMain statter, StatterSettings settings)
         {
             InitializeComponent();
 
+            _statter = statter;
             _settings = settings;
             statGraph.ShowSteppedStatLines = _settings.StepLines;
         }
@@ -51,6 +53,7 @@ namespace ACT_Plugin.UI
 
         public void ShowStats(List<StatterStat> stats, EncounterData encounterData)
         {
+            _statter.Log(string.Format("Showing {0} stat(s)", stats.Count));
             ShowStats(stats, encounterData.StartTime, encounterData.EndTime, string.Format("{0} - {1}", encounterData.ZoneName, encounterData.Title));
         }
 
@@ -68,9 +71,11 @@ namespace ACT_Plugin.UI
                 StatterEncounterStat encStat = new StatterEncounterStat()
                 {
                     Stat = stat,
-                    Readings = stat.GetReadings(_start, _end)
+                    Readings = stat.GetReadings(_start, _end),
+                    AvgReading = new StatterStatReading()
                 };
 
+                double statSum = 0;
                 foreach (StatterStatReading reading in encStat.Readings)
                 {
                     if (encStat.MinReading == null || reading.Value < encStat.MinReading.Value)
@@ -78,6 +83,12 @@ namespace ACT_Plugin.UI
 
                     if (encStat.MaxReading == null || reading.Value > encStat.MaxReading.Value)
                         encStat.MaxReading = reading;
+
+                    statSum += reading.Value;
+                }
+                if (encStat.Readings.Count > 0)
+                {
+                    encStat.AvgReading.Value = (statSum / encStat.Readings.Count);
                 }
 
                 _stats.Add(encStat);
@@ -92,6 +103,7 @@ namespace ACT_Plugin.UI
             dt.Columns.Add("Stat", typeof(string));
             dt.Columns.Add("Min", typeof(string));
             dt.Columns.Add("Max", typeof(string));
+            dt.Columns.Add("Avg", typeof(string));
 
             if ((_end - _start).TotalSeconds > 1)
             {
@@ -100,7 +112,8 @@ namespace ACT_Plugin.UI
                     DataRow dr = dt.Rows.Add(new object[] { 
                         stat.Stat.Name, 
                         stat.MinReading == null ? "" : stat.MinReading.Value.ToString("0"), 
-                        stat.MaxReading == null ? "" : stat.MaxReading.Value.ToString("0"), 
+                        stat.MaxReading == null ? "" : stat.MaxReading.Value.ToString("0"),
+                        stat.AvgReading == null ? "" : stat.AvgReading.Value.ToString("0"),
                     });
                 }
 

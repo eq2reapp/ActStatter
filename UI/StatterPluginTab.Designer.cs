@@ -40,12 +40,21 @@
             this.grpTrackedStats = new System.Windows.Forms.GroupBox();
             this.pnlStatDetails = new System.Windows.Forms.FlowLayoutPanel();
             this.btnAdd = new System.Windows.Forms.Button();
+            this.tabExtra = new System.Windows.Forms.TabControl();
+            this.tabInstructions = new System.Windows.Forms.TabPage();
+            this.tabLogs = new System.Windows.Forms.TabPage();
+            this.txtLogs = new System.Windows.Forms.TextBox();
+            this.btnCopyLogs = new System.Windows.Forms.Button();
+            this.btnRefresh = new System.Windows.Forms.Button();
             this.pnlMain.SuspendLayout();
             this.grpStatterConfig.SuspendLayout();
             this.grpGeneralOptions.SuspendLayout();
             this.pnlInstructionsContainer.SuspendLayout();
             this.pnlInstructions.SuspendLayout();
             this.grpTrackedStats.SuspendLayout();
+            this.tabExtra.SuspendLayout();
+            this.tabInstructions.SuspendLayout();
+            this.tabLogs.SuspendLayout();
             this.SuspendLayout();
             // 
             // pnlMain
@@ -105,6 +114,7 @@
             this.btnTestGraph.TabIndex = 1;
             this.btnTestGraph.Text = "Test Graph";
             this.btnTestGraph.UseVisualStyleBackColor = true;
+            this.btnTestGraph.Visible = false;
             this.btnTestGraph.Click += new System.EventHandler(this.btnTestGraph_Click);
             // 
             // chkParseOnImport
@@ -124,7 +134,7 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.pnlInstructionsContainer.BackColor = System.Drawing.SystemColors.ControlLight;
-            this.pnlInstructionsContainer.Controls.Add(this.pnlInstructions);
+            this.pnlInstructionsContainer.Controls.Add(this.tabExtra);
             this.pnlInstructionsContainer.Location = new System.Drawing.Point(367, 28);
             this.pnlInstructionsContainer.Name = "pnlInstructionsContainer";
             this.pnlInstructionsContainer.Padding = new System.Windows.Forms.Padding(1);
@@ -136,10 +146,10 @@
             this.pnlInstructions.BackColor = System.Drawing.SystemColors.Window;
             this.pnlInstructions.Controls.Add(this.txtInstructions);
             this.pnlInstructions.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.pnlInstructions.Location = new System.Drawing.Point(1, 1);
+            this.pnlInstructions.Location = new System.Drawing.Point(3, 3);
             this.pnlInstructions.Name = "pnlInstructions";
             this.pnlInstructions.Padding = new System.Windows.Forms.Padding(5);
-            this.pnlInstructions.Size = new System.Drawing.Size(579, 612);
+            this.pnlInstructions.Size = new System.Drawing.Size(565, 580);
             this.pnlInstructions.TabIndex = 13;
             // 
             // txtInstructions
@@ -151,7 +161,7 @@
             this.txtInstructions.Location = new System.Drawing.Point(5, 5);
             this.txtInstructions.Name = "txtInstructions";
             this.txtInstructions.ReadOnly = true;
-            this.txtInstructions.Size = new System.Drawing.Size(569, 602);
+            this.txtInstructions.Size = new System.Drawing.Size(555, 570);
             this.txtInstructions.TabIndex = 12;
             this.txtInstructions.Text = "";
             // 
@@ -191,6 +201,78 @@
             this.btnAdd.UseVisualStyleBackColor = true;
             this.btnAdd.Click += new System.EventHandler(this.btnAdd_Click);
             // 
+            // tabExtra
+            // 
+            this.tabExtra.Controls.Add(this.tabInstructions);
+            this.tabExtra.Controls.Add(this.tabLogs);
+            this.tabExtra.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tabExtra.Location = new System.Drawing.Point(1, 1);
+            this.tabExtra.Name = "tabExtra";
+            this.tabExtra.SelectedIndex = 0;
+            this.tabExtra.Size = new System.Drawing.Size(579, 612);
+            this.tabExtra.TabIndex = 16;
+            this.tabExtra.SelectedIndexChanged += new System.EventHandler(this.tabExtra_SelectedIndexChanged);
+            // 
+            // tabInstructions
+            // 
+            this.tabInstructions.Controls.Add(this.pnlInstructions);
+            this.tabInstructions.Location = new System.Drawing.Point(4, 22);
+            this.tabInstructions.Name = "tabInstructions";
+            this.tabInstructions.Padding = new System.Windows.Forms.Padding(3);
+            this.tabInstructions.Size = new System.Drawing.Size(571, 586);
+            this.tabInstructions.TabIndex = 0;
+            this.tabInstructions.Text = "Instructions";
+            this.tabInstructions.UseVisualStyleBackColor = true;
+            // 
+            // tabLogs
+            // 
+            this.tabLogs.Controls.Add(this.btnRefresh);
+            this.tabLogs.Controls.Add(this.btnCopyLogs);
+            this.tabLogs.Controls.Add(this.txtLogs);
+            this.tabLogs.Location = new System.Drawing.Point(4, 22);
+            this.tabLogs.Name = "tabLogs";
+            this.tabLogs.Padding = new System.Windows.Forms.Padding(3);
+            this.tabLogs.Size = new System.Drawing.Size(571, 586);
+            this.tabLogs.TabIndex = 1;
+            this.tabLogs.Text = "Logs";
+            this.tabLogs.UseVisualStyleBackColor = true;
+            // 
+            // txtLogs
+            // 
+            this.txtLogs.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtLogs.BackColor = System.Drawing.SystemColors.Window;
+            this.txtLogs.Location = new System.Drawing.Point(6, 6);
+            this.txtLogs.Multiline = true;
+            this.txtLogs.Name = "txtLogs";
+            this.txtLogs.ReadOnly = true;
+            this.txtLogs.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.txtLogs.Size = new System.Drawing.Size(559, 545);
+            this.txtLogs.TabIndex = 0;
+            // 
+            // btnCopyLogs
+            // 
+            this.btnCopyLogs.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.btnCopyLogs.Location = new System.Drawing.Point(87, 556);
+            this.btnCopyLogs.Name = "btnCopyLogs";
+            this.btnCopyLogs.Size = new System.Drawing.Size(75, 23);
+            this.btnCopyLogs.TabIndex = 1;
+            this.btnCopyLogs.Text = "Copy";
+            this.btnCopyLogs.UseVisualStyleBackColor = true;
+            this.btnCopyLogs.Click += new System.EventHandler(this.btnCopyLogs_Click);
+            // 
+            // btnRefresh
+            // 
+            this.btnRefresh.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.btnRefresh.Location = new System.Drawing.Point(6, 556);
+            this.btnRefresh.Name = "btnRefresh";
+            this.btnRefresh.Size = new System.Drawing.Size(75, 23);
+            this.btnRefresh.TabIndex = 2;
+            this.btnRefresh.Text = "Refresh";
+            this.btnRefresh.UseVisualStyleBackColor = true;
+            this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
+            // 
             // StatterPluginTab
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -206,6 +288,10 @@
             this.pnlInstructionsContainer.ResumeLayout(false);
             this.pnlInstructions.ResumeLayout(false);
             this.grpTrackedStats.ResumeLayout(false);
+            this.tabExtra.ResumeLayout(false);
+            this.tabInstructions.ResumeLayout(false);
+            this.tabLogs.ResumeLayout(false);
+            this.tabLogs.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -224,5 +310,11 @@
         protected internal System.Windows.Forms.CheckBox chkParseOnImport;
         private System.Windows.Forms.Button btnTestGraph;
         protected internal System.Windows.Forms.CheckBox chkSteppedLines;
+        private System.Windows.Forms.TabControl tabExtra;
+        private System.Windows.Forms.TabPage tabInstructions;
+        private System.Windows.Forms.TabPage tabLogs;
+        private System.Windows.Forms.TextBox txtLogs;
+        private System.Windows.Forms.Button btnCopyLogs;
+        private System.Windows.Forms.Button btnRefresh;
     }
 }

@@ -13,6 +13,7 @@ namespace ACT_Plugin.UI
         // (16 lines per macro, with the first being the marker)
         public const int MAX_SELECTABLE_STATS = 15;
 
+        private StatterMain _statter = null;
         private StatterSettings _settings = null;
         private bool _loading = true;
 
@@ -43,10 +44,11 @@ namespace ACT_Plugin.UI
             Color.FromArgb(255, 105, 105, 105)
         };
 
-        public StatterPluginTab(StatterSettings settings)
+        public StatterPluginTab(StatterMain statter, StatterSettings settings)
         {
             InitializeComponent();
 
+            _statter = statter;
             _settings = settings;
         }
 
@@ -57,6 +59,8 @@ namespace ACT_Plugin.UI
             chkParseOnImport.Checked = _settings.ParseOnImport;
             chkSteppedLines.Checked = _settings.StepLines;
             SetSelectedStats();
+
+            btnTestGraph.Visible = StatterMain.DEBUG;
 
             _loading = false;
         }
@@ -110,8 +114,6 @@ namespace ACT_Plugin.UI
         {
             txtInstructions.Rtf = string.Format(
 @"{{\rtf1\ansi\f0\pard
-{{\b Instructions}}\par
-\par
 Create a macro that calls {{\i /do_file_commands {0}}} and bind this to a hotkey you naturally use often during combat.\par
 \par
 To view your stats, right-click an encounter listed in the encounter tree (note that this can also include the zone-wide {{\i ""All""}} encounter) and select {{\i View Encounter Stats}}. Doing so will open a window showing the minimum and maximum recorded values for each stat during the selected encounter. Clicking on one or more stat rows will display a graph of each selected stat over the course of the encounter. Hovering over the graph will show instantaneous values and times.\par
@@ -171,7 +173,7 @@ Finally, note that /do_file_commands currently limits the number of stats that c
                 stats[1].ParseReading((i * 2).ToString(), start.AddSeconds(i));
             }
 
-            var dlgViewStats = new StatterViewStatsForm(_settings);
+            var dlgViewStats = new StatterViewStatsForm(_statter, _settings);
             dlgViewStats.ShowStats(stats, start, end, "Test");
         }
 
@@ -191,6 +193,27 @@ Finally, note that /do_file_commands currently limits the number of stats that c
             {
                 _settings.Save();
             }
+        }
+
+        private void tabExtra_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (tabExtra.SelectedTab == tabLogs)
+            {
+                txtLogs.Lines = _statter.GetLogs();
+            }
+        }
+
+        private void btnCopyLogs_Click(object sender, EventArgs e)
+        {
+            if (!String.IsNullOrEmpty(txtLogs.Text))
+            {
+                Clipboard.SetText(txtLogs.Text);
+            }
+        }
+
+        private void btnRefresh_Click(object sender, EventArgs e)
+        {
+            txtLogs.Lines = _statter.GetLogs();
         }
     }
 }
