@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.IO;
 using Advanced_Combat_Tracker;
 using ACT_Plugin.UI;
-using ACT_Plugin.Model;
 using System.Reflection;
 
 namespace ACT_Plugin
@@ -24,7 +22,7 @@ namespace ACT_Plugin
         public static bool DEBUG = false;
 #endif
 
-        public static int PLUGIN_ID = 999999;
+        public static int PLUGIN_ID = 90;
 
         public const string MACRO_FILENAME = "statter.txt";
         public const string DYNAMICDATA_NOP = "dynamicdata Start";
@@ -114,6 +112,14 @@ namespace ACT_Plugin
                 _timerDelayedAttach.Start();
 
                 ShowPluginStatus(true);
+
+                // Update pattern for file download
+                // See: https://gist.github.com/EQAditu/4d6e3a1945fed2199f235fedc1e3ec56#Act_Plugin_Update.cs
+                ActGlobals.oFormActMain.UpdateCheckClicked += OFormActMain_UpdateCheckClicked;
+                if (ActGlobals.oFormActMain.GetAutomaticUpdatesAllowed())
+                {
+                    new System.Threading.Thread(new System.Threading.ThreadStart(OFormActMain_UpdateCheckClicked)) { IsBackground = true }.Start();
+                }
             }
             catch (Exception ex)
             {
@@ -127,6 +133,8 @@ namespace ACT_Plugin
             Log("Deinitializing plugin");
             try
             {
+                ActGlobals.oFormActMain.UpdateCheckClicked -= OFormActMain_UpdateCheckClicked;
+
                 DettachFromActForm();
 
                 ShowPluginStatus(false);
@@ -138,6 +146,41 @@ namespace ACT_Plugin
             finally
             {
                 Log("Deinitialized plugin");
+            }
+        }
+
+        private void OFormActMain_UpdateCheckClicked()
+        {
+            // This ID must be the same ID used on ACT's website.
+            int pluginId = PLUGIN_ID;
+            string pluginName = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyTitleAttribute>().Title;
+            try
+            {
+                Version localVersion = GetType().Assembly.GetName().Version;
+                Version remoteVersion = new Version(ActGlobals.oFormActMain.PluginGetRemoteVersion(pluginId).TrimStart(new char[] { 'v' }));
+                if (remoteVersion > localVersion)
+                {
+                    DialogResult result = MessageBox.Show(
+                        $"There is an updated version of the {pluginName} plugin.  Update it now?\n\n(If there is an update to ACT, you should click No and update ACT first.)",
+                        "New Version", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                    if (result == DialogResult.Yes)
+                    {
+                        FileInfo updatedFile = ActGlobals.oFormActMain.PluginDownload(pluginId);
+                        ActPluginData pluginData = ActGlobals.oFormActMain.PluginGetSelfData(this);
+                        pluginData.pluginFile.Delete();
+                        updatedFile.MoveTo(pluginData.pluginFile.FullName);
+
+                        // You can choose to simply restart the plugin, if the plugin can properly clean-up in DeInit
+                        // and has no external assemblies that update.
+                        ThreadInvokes.CheckboxSetChecked(ActGlobals.oFormActMain, pluginData.cbEnabled, false);
+                        Application.DoEvents();
+                        ThreadInvokes.CheckboxSetChecked(ActGlobals.oFormActMain, pluginData.cbEnabled, true);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ActGlobals.oFormActMain.WriteExceptionLog(ex, $"Plugin Update Check - {pluginName}");
             }
         }
 
