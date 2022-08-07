@@ -1,28 +1,31 @@
-# eq2statter
+# Statter
 
-This [Advanced Combat Tracker (ACT)](http://advancedcombattracker.com/) plugin
-will display a graph of combat stats during parsed encounters.
+This [Advanced Combat Tracker (ACT)](http://advancedcombattracker.com/) plugin adds a capability to view a graph of combat stats parsed after encounters.
 
-## Setup
-1. Download ACT
-2. Download the plugin
- [ActStatter.dll](https://github.com/eq2reapp/ActStatter/blob/master/bin/Release/ActStatter.dll?raw=true)
- to a location on your hard drive
-3. Setup ACT as you would normally
-4. Open ACT and select the __Plugins__ tab
-5. Click __Browse...__, and select the location where you saved the plugin
-6. Click __Add/Enable Plugin__
-7. Click the new __Statter__ tab to configure the plugin
-8. Add a couple of stats to start (eg. Fervor, Potency) by clicking the __+__ button and selecting the desired stat
-    * Optionally select the colour that will be used to display the stat in the encounter graph
-9. Take a moment to read the __Instructions__ on this tab, they'll explain a few of the less obvious features of the plugin
+## Setup (recommended)
+1. Open ACT and select the `Plugins` tab
+2. Click the `Get Plugins...` button
+3. In the window that appears, select `(90) [EQ2] Statter` and then click `Download and Enable`
+4. Follow the configuration instructions below
+
+## Setup (manual)
+1. Download the latest version of the plugin [ActStatter.dll](https://github.com/eq2reapp/ActStatter/blob/master/bin/Release/ActStatter.dll?raw=true) to a location on your computer
+2. Open ACT and select the `Plugins` tab
+3. Click `Browse...` and select the location where you saved the plugin
+4. Click `Add/Enable Plugin`
+5. Follow the configuration instructions below
+
+## Configuration
+1. Click the new `Statter` tab inside the `Plugins` tab
+2. Add a couple of stats to start (eg. Fervor, Potency) by clicking the `+` button and selecting the desired stat
+3. Take a moment to read the `Instructions` on this tab, they'll explain a few of the less obvious features of the plugin (including how to generate the stats in-game)
 
 ## Usage
-1. Create a macro in the EQ2 client that includes the command __/do_file_commands statter.txt__
+1. Create a macro in-game that includes the command `/do_file_commands statter.txt`
     * Every time you run this macro, your selected stats will be dumped to the log and parsed -- so use this macro as often as you would like to parse your stats
-    * Add the macro step to a temp buff or other frequently used spell to track your stats without having to click the macro manually.
-2. You should now be able to right-click on an encounter in ACT, and select __View Encounter Stats__ at the bottom of the menu
-3. This will open a window where you will see the stats that you selected in the initial setup
+    * You may want to add the macro step to a temp buff or other frequently used spell to track your stats without having to click the macro manually
+2. You should now be able to right-click on an encounter in ACT, and select `View Encounter Stats` at the bottom of the menu
+3. This will open a window where you can see the stats that you selected in the initial setup
 4. Click on a stat to see it graphed over the duration of the encounter
     * If you select more than one stat, they will be overlayed on the same graph (albeit using the same scale...)
 4. If you mouse-over the graph, it will show you the time and stat value at the mouse's position
@@ -37,7 +40,7 @@ The entry point for the plugin is in __StatterPlugin.cs__, and the main UI is __
 
 The plugin saves its settings in the following location: __%userprofile%\appdata\Roaming\Advanced Combat Tracker\Config\Statter.config.xml__.
 
-If you build and add the Debug version of the plugin, you will notice some extra info on the plugin settings tab, as well as logging to your desktop folder.
+If you build and add the Debug version of the plugin, you will notice some extra info on the plugin settings tab.
 
 ## Contact
 Send an in-game tell to Skyfire.Reapp if you have questions.
