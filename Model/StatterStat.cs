@@ -105,6 +105,10 @@ namespace ACT_Plugin.Model
             double temp = 0;
             string[] parts;
 
+            // Thanks Doxiah for the following fix for languages that use ',' and '.' differently
+            // thanks english in decimal numbers:
+            System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
+
             switch (_clientAttribute)
             {
                 case "HealthRange":
