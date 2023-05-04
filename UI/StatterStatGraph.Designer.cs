@@ -1,4 +1,4 @@
-﻿namespace ACT_Plugin.UI
+﻿namespace ActStatter.UI
 {
     partial class StatterStatGraph
     {

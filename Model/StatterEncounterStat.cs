@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace ACT_Plugin.Model
+namespace ActStatter.Model
 {
     public class StatterEncounterStat
     {

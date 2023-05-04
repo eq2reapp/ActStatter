@@ -1,4 +1,4 @@
-﻿namespace ACT_Plugin.UI
+﻿namespace ActStatter.UI
 {
     partial class StatterViewStatsForm
     {
@@ -28,12 +28,12 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.dgStats = new ACT_Plugin.UI.StatterFastDataGrid();
+            this.dgStats = new ActStatter.UI.StatterFastDataGrid();
             this.ColStat = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColMin = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColMax = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.pnlGraph = new System.Windows.Forms.Panel();
-            this.statGraph = new ACT_Plugin.UI.StatterStatGraph();
+            this.statGraph = new ActStatter.UI.StatterStatGraph();
             this.pnlGraphControls = new System.Windows.Forms.Panel();
             ((System.ComponentModel.ISupportInitialize)(this.dgStats)).BeginInit();
             this.pnlGraph.SuspendLayout();
@@ -58,6 +58,7 @@
             this.ColMax});
             this.dgStats.GridColor = System.Drawing.SystemColors.ControlLight;
             this.dgStats.Location = new System.Drawing.Point(6, 6);
+            this.dgStats.MultiSelect = false;
             this.dgStats.Name = "dgStats";
             this.dgStats.ReadOnly = true;
             this.dgStats.RowHeadersVisible = false;
@@ -66,7 +67,7 @@
             this.dgStats.ShowCellToolTips = false;
             this.dgStats.ShowEditingIcon = false;
             this.dgStats.ShowRowErrors = false;
-            this.dgStats.Size = new System.Drawing.Size(268, 697);
+            this.dgStats.Size = new System.Drawing.Size(268, 716);
             this.dgStats.TabIndex = 1;
             this.dgStats.SelectionChanged += new System.EventHandler(this.dgStats_SelectionChanged);
             // 
@@ -109,7 +110,7 @@
             this.pnlGraph.Location = new System.Drawing.Point(280, 0);
             this.pnlGraph.Name = "pnlGraph";
             this.pnlGraph.Padding = new System.Windows.Forms.Padding(5);
-            this.pnlGraph.Size = new System.Drawing.Size(774, 710);
+            this.pnlGraph.Size = new System.Drawing.Size(728, 729);
             this.pnlGraph.TabIndex = 2;
             // 
             // statGraph
@@ -119,7 +120,7 @@
             this.statGraph.Location = new System.Drawing.Point(5, 5);
             this.statGraph.Name = "statGraph";
             this.statGraph.ShowSteppedStatLines = true;
-            this.statGraph.Size = new System.Drawing.Size(764, 700);
+            this.statGraph.Size = new System.Drawing.Size(718, 719);
             this.statGraph.TabIndex = 1;
             // 
             // pnlGraphControls
@@ -127,16 +128,17 @@
             this.pnlGraphControls.Dock = System.Windows.Forms.DockStyle.Top;
             this.pnlGraphControls.Location = new System.Drawing.Point(5, 5);
             this.pnlGraphControls.Name = "pnlGraphControls";
-            this.pnlGraphControls.Size = new System.Drawing.Size(764, 0);
+            this.pnlGraphControls.Size = new System.Drawing.Size(718, 0);
             this.pnlGraphControls.TabIndex = 0;
             // 
             // StatterViewStatsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1054, 710);
+            this.ClientSize = new System.Drawing.Size(1008, 729);
             this.Controls.Add(this.pnlGraph);
             this.Controls.Add(this.dgStats);
+            this.MinimumSize = new System.Drawing.Size(512, 256);
             this.Name = "StatterViewStatsForm";
             this.ShowIcon = false;
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;

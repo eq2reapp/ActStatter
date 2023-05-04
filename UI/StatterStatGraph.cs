@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
-using ACT_Plugin.Model;
+using ActStatter.Model;
 
-namespace ACT_Plugin.UI
+namespace ActStatter.UI
 {
     public partial class StatterStatGraph : UserControl
     {
         // Global margins surrounding the graph area (used for labels)
-        private const int MARGIN_DATA_X_LEFT = 55;
+        private const int MARGIN_DATA_X_LEFT = 72;
         private const int MARGIN_DATA_X_RIGHT = 55;
         private const int MARGIN_DATA_Y_TOP = 30;
         private const int MARGIN_DATA_Y_BOTTOM = 30;

@@ -6,10 +6,10 @@ using System.Text;
 using System.Windows.Forms;
 using System.Xml;
 using Advanced_Combat_Tracker;
-using ACT_Plugin.Model;
-using ACT_Plugin.UI;
+using ActStatter.Model;
+using ActStatter.UI;
 
-namespace ACT_Plugin
+namespace ActStatter
 {
     public class StatterSettings
     {
@@ -124,6 +124,7 @@ namespace ACT_Plugin
             {
                 XmlElement statNode = AttachChildNode(attachPoint, "Stat", null);
                 AttachChildNode(statNode, "Name", stat.Name);
+                AttachChildNode(statNode, "Key", stat.Key);
                 AttachChildNode(statNode, "Colour", ColourToString(stat.Colour));
             }
         }

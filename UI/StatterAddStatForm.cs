@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Windows.Forms;
 using System.Drawing;
-using ACT_Plugin.Model;
+using ActStatter.Model;
 
-namespace ACT_Plugin.UI
+namespace ActStatter.UI
 {
     public partial class StatterAddStatForm : Form
     {
@@ -16,12 +16,12 @@ namespace ACT_Plugin.UI
             InitializeComponent();
         }
 
-        public void SetUsedStats(List<string> usedStats)
+        public void SetUsedStats(List<string> usedStatNames)
         {
             cmbStat.BeginUpdate();
             cmbStat.Items.Clear();
-            foreach (string stat in StatterStat.GetAvailableStats(usedStats))
-                cmbStat.Items.Add(stat);
+            foreach (string statName in StatterStat.GetAvailableStatNames(usedStatNames))
+                cmbStat.Items.Add(statName);
             cmbStat.EndUpdate();
 
             if (cmbStat.Items.Count > 0)

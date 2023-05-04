@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Data;
 using System.Windows.Forms;
 using Advanced_Combat_Tracker;
-using ACT_Plugin.Model;
+using ActStatter.Model;
 
-namespace ACT_Plugin.UI
+namespace ActStatter.UI
 {
     public partial class StatterViewStatsForm : Form
     {
@@ -51,30 +51,37 @@ namespace ACT_Plugin.UI
                 statGraph.DrawStats(selectedStats, _start, _end);
         }
 
-        public void ShowStats(List<StatterStat> stats, EncounterData encounterData)
+        public void ShowStats(List<StatterStatReading> readings, EncounterData encounterData)
         {
-            _statter.Log(string.Format("Showing {0} stat(s)", stats.Count));
-            ShowStats(stats, encounterData.StartTime, encounterData.EndTime, string.Format("{0} - {1}", encounterData.ZoneName, encounterData.Title));
-        }
+            _start = encounterData.StartTime;
+            _end = encounterData.EndTime;
+            _title = string.Format("{0} - {1}", encounterData.ZoneName, encounterData.Title);
 
-        public void ShowStats(List<StatterStat> stats, DateTime startTime, DateTime endTime, string title)
-        {
-            _start = startTime;
-            _end = endTime;
-            _title = title;
+            _statter.Log(string.Format("Showing {0} stat reading(s)", readings.Count));
 
-            // Iterate over the supplied stats and do some high-level calculations.
-            // Add the stat into the local collection to be rendered later.
+            // Group all the readings by their stat
             _stats.Clear();
-            foreach (StatterStat stat in stats)
+            foreach (StatterStatReading reading in readings)
             {
-                StatterEncounterStat encStat = new StatterEncounterStat()
+                // Compare by name so that multiple stat collecters can aggregate readings
+                var encStat = _stats.Find(x => x.Stat.Name == reading.Stat.Name);
+                if (encStat == null)
                 {
-                    Stat = stat,
-                    Readings = stat.GetReadings(_start, _end),
-                    AvgReading = new StatterStatReading()
-                };
+                    encStat = new StatterEncounterStat()
+                    {
+                        Stat = reading.Stat,
+                        Readings = new List<StatterStatReading>(),
+                        AvgReading = new StatterStatReading()
+                    };
+                    _stats.Add(encStat);
+                }
 
+                encStat.Readings.Add(reading);
+            }
+
+            // Iterate over the stats and do some high-level calculations.
+            foreach (StatterEncounterStat encStat in _stats)
+            {
                 double statSum = 0;
                 foreach (StatterStatReading reading in encStat.Readings)
                 {
@@ -90,8 +97,6 @@ namespace ACT_Plugin.UI
                 {
                     encStat.AvgReading.Value = (statSum / encStat.Readings.Count);
                 }
-
-                _stats.Add(encStat);
             }
 
             ShowStatsTable();

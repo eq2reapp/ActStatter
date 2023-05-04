@@ -1,4 +1,4 @@
-﻿namespace ACT_Plugin.UI
+﻿namespace ActStatter.UI
 {
     partial class StatterPluginTab
     {
@@ -104,18 +104,6 @@
             this.chkSteppedLines.Text = "Use stepped stat lines in graphs";
             this.chkSteppedLines.UseVisualStyleBackColor = true;
             this.chkSteppedLines.CheckedChanged += new System.EventHandler(this.chkSteppedLines_CheckedChanged);
-            // 
-            // btnTestGraph
-            // 
-            this.btnTestGraph.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnTestGraph.Location = new System.Drawing.Point(183, 149);
-            this.btnTestGraph.Name = "btnTestGraph";
-            this.btnTestGraph.Size = new System.Drawing.Size(127, 23);
-            this.btnTestGraph.TabIndex = 1;
-            this.btnTestGraph.Text = "Test Graph";
-            this.btnTestGraph.UseVisualStyleBackColor = true;
-            this.btnTestGraph.Visible = false;
-            this.btnTestGraph.Click += new System.EventHandler(this.btnTestGraph_Click);
             // 
             // chkParseOnImport
             // 

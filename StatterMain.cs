@@ -6,10 +6,11 @@ using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.IO;
 using Advanced_Combat_Tracker;
-using ACT_Plugin.UI;
+using ActStatter.UI;
+using ActStatter.Model;
 using System.Reflection;
 
-namespace ACT_Plugin
+namespace ActStatter
 {
     /*
     * See https://github.com/EQAditu/AdvancedCombatTracker/wiki/Plugin-Creation-Tips
@@ -61,15 +62,18 @@ namespace ACT_Plugin
         // Our parsing-sepecifc state vars
         private List<Func<LogLineEventArgs, bool>> _readHandlers = new List<Func<LogLineEventArgs, bool>>();
         private Regex _regexStatPackStart = new Regex(string.Format(@"^{0}\.$", DYNAMICDATA_NOT_FOUND), RegexOptions.Compiled);
+        private Regex _regexDarqStatMonLine = new Regex("^You tell [^\"]+\"DarqUI_StatMon:", RegexOptions.Compiled);
         private ParseState _parseState = ParseState.None;
-        private int _statIdx = 0;
         private StatterPluginTab _ui = null;
         private StatterSettings _settings = new StatterSettings();
+        private StatterStatCollection _statCollection = null;
 
         public StatterMain()
         {
             // Wire up other events
             _timerDelayedAttach.Tick += new EventHandler(timerDelayedAttach_Tick);
+
+            _statCollection = new StatterStatCollection(_settings);
         }
 
         public void Log(string message)
@@ -252,9 +256,10 @@ namespace ACT_Plugin
 
             // Extract the actual text of the log line
             string logLine = logInfo.logLine;
-            int timeEndPos = logLine.IndexOf("] ");
-            if (timeEndPos >= 0)
-                logLine = logLine.Substring(timeEndPos + 2).Trim();
+            string marker = "] ";
+            int markerPos = logLine.IndexOf(marker);
+            if (markerPos >= 0)
+                logLine = logLine.Substring(markerPos + marker.Length).Trim();
 
             switch (_parseState)
             {
@@ -264,7 +269,7 @@ namespace ACT_Plugin
                     if (_regexStatPackStart.IsMatch(logLine))
                     {
                         _parseState = ParseState.ReadingStats;
-                        _statIdx = 0;
+                        _statCollection.StartStatGroup();
                         Log("Parsing stats");
                     }
                     break;
@@ -272,16 +277,19 @@ namespace ACT_Plugin
                 // ParseState.ReadingStats implies that we are currently parsing stats, so keep
                 // reading them until we hit the limit
                 case ParseState.ReadingStats:
-                    var stat = _settings.Stats[_statIdx];
-                    stat.ParseReading(logLine, logInfo.detectedTime);
-                    _statIdx++;
-
-                    if (_statIdx >= _settings.Stats.Count) // We're done with this stat pack
-                    {
+                    if (!_statCollection.AddStatGroupReading(logLine, logInfo.detectedTime))
                         _parseState = ParseState.None;
-                    }
-
                     break;
+            }
+
+            // Also check for DarqUI StatMon loglines
+            if (_regexDarqStatMonLine.IsMatch(logLine))
+            {
+                marker = ", \"";
+                markerPos = logLine.IndexOf(marker);
+                if (markerPos >= 0)
+                    logLine = logLine.Substring(markerPos + marker.Length).TrimEnd('"');
+                _statCollection.AddDarqReading(logLine, logInfo.detectedTime);
             }
 
             return parsed;
@@ -385,7 +393,7 @@ namespace ACT_Plugin
 
                 // Now append a directive for each stat being tracked
                 foreach (var stat in _settings.Stats)
-                    sb.AppendLine(string.Format("{0}{1}", DYNAMICDATA_COMMAND_PREFIX, stat.ClientAttribute));
+                    sb.AppendLine(string.Format("{0}{1}", DYNAMICDATA_COMMAND_PREFIX, stat.Key));
 
                 try
                 {
@@ -447,11 +455,12 @@ namespace ACT_Plugin
             {
                 encounterData = GetSelectedEncounter();
             }
+
             if (encounterData != null)
             {
                 Log("Showing encounter data");
                 var dlgViewStats = new StatterViewStatsForm(this, _settings);
-                dlgViewStats.ShowStats(_settings.Stats, encounterData);
+                dlgViewStats.ShowStats(_statCollection.GetReadings(encounterData.StartTime, encounterData.EndTime), encounterData);
             }
             else
             {
@@ -460,6 +469,3 @@ namespace ACT_Plugin
         }
     }
 }
-
-
-

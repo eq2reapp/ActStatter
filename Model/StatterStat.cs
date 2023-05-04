@@ -2,65 +2,131 @@
 using System.Collections.Generic;
 using System.Drawing;
 
-namespace ACT_Plugin.Model
+namespace ActStatter.Model
 {
     public class StatterStat
     {
         public static readonly Color DEFAULT_COLOUR = Color.Black;
 
         private string _name = "";
-        private string _clientAttribute = "";
-        private List<StatterStatReading> _readings = new List<StatterStatReading>();
+        private string _key = "";
 
         public string Name { get { return _name; } }
-        public string ClientAttribute { get { return _clientAttribute; } }
+        public string Key { get { return _key; } }
         public Color Colour { get; set; }
-        public List<StatterStatReading> Readings { get { return _readings; } }
 
         // Trackable stats are pulled from <EQ2_Dir>\UI\Default\eq2ui_gamedata.xml
         // Search for: <DataSource description="Stats" Name="Stats">
-        // TODO: Present an option to slurp this in?
-        private static Dictionary<string, string> ClientAttributeLookupTable = new Dictionary<string, string>()
+        private static Dictionary<string, string> StatKeyToFriendlyNames = new Dictionary<string, string>()
         {
-            { "Stamina", "Stamina" },
-            { "Wisdom", "Wisdom" },
+            { "AAXPMod", "AA XP Mod" },
+            { "AAXPModCap", "AA XP Mod Cap" },
+            { "Ability_Mod", "Ability Mod" },
+            { "AbilityDoubleAttack", "Ability Double Cast" },
+            { "Accuracy", "Accuracy" },
+            { "AE_AutoAtk_Percent", "AE Auto" },
             { "Agility", "Agility" },
-            { "Strength", "Strength" },
-            { "Intelligence", "Intelligence" },
-            { "Max Health", "HealthRange" },
-            { "Max Mana", "PowerRange" },
-            { "Crit Chance", "Crit_Chance" },
-            { "Crit Bonus", "Crit_Bonus" },
-            { "Potency", "Potency" },
-            { "Ability Mod", "Ability_Mod" },
-            { "Fervor", "Fervor" },
-            { "Ability Double Cast", "AbilityDoubleAttack" },
+            { "Arcane", "Arcane Mit" },
+            { "CombatXPMod", "CombatXPMod" },
+            { "CombatXPModCap", "CombatXPModCap" },
+            { "ConcentrationRange", "Concentration" },
+            { "Crit_Bonus", "Crit Bonus" },
+            { "Crit_Chance", "Crit Chance" },
+            { "Critical_Mitigation", "Crit Mit" },
+            { "CurrentStatus", "Status" },
+            { "Damage_Reduction_Arcane", "DR Arcane" },
+            { "Damage_Reduction_Elemental", "DR Elemental" },
+            { "Damage_Reduction_Noxious", "DR Noxious" },
+            { "Damage_Reduction_Percentage_Arcane", "Arcane Damage Reduction %" },
+            { "Damage_Reduction_Percentage_Elemental", "Elemental Damage Reduction %" },
+            { "Damage_Reduction_Percentage_Noxious", "Noxious Damage Reduction %" },
+            { "Damage_Reduction_Percentage_Physical", "Physical Damage Reduction %" },
+            { "Damage_Reduction_Percentage_Power", "DR Power %" },
+            { "Damage_Reduction_Physical", "DR Physical" },
+            { "Damage_Reduction_Power", "DR Power" },
+            { "Defense", "Defense" },
+            { "Defense_Avoidance", "Avoidance" },
+            { "Defense_AvoidanceBase", "Avoidance %" },
+            { "Defense_AvoidanceBlock", "Block Chance" },
+            { "Defense_AvoidanceParry", "Avoidance Parry" },
+            { "Defense_Mitigation", "Mitigation" },
+            { "Defense_MitigationPercent", "Mitigation %" },
+            { "Defense_Toughness", "Toughness" },
+            { "Defense_ToughnessPercent", "Toughness %" },
+            { "Deflection_Chance", "Deflection Chance" },
+            { "Double_Atk_Percent", "Multi Attack" },
             { "DPS", "DPS" },
-            { "Haste", "Haste" },
-            { "Multi Attack", "Double_Atk_Percent" },
+            { "Dungeons", "Dungeons" },
+            { "Elemental", "Elemental Mit" },
+            { "Fervor", "Fervor" },
             { "Flurry", "Flurry" },
-            { "Flurry Multiplier", "FlurryMult" },
-            { "AE Auto", "AE_AutoAtk_Percent" },
-            { "Weapon Damage Bonus", "Weapon_Damage_Bonus" },
-            { "Mitigation", "Defense_Mitigation" },
-            { "Mitigation %", "Defense_MitigationPercent" },
-            { "Avoidance", "Defense_Avoidance" },
-            { "Avoidance %", "Defense_AvoidanceBase" },
-            { "Physical Damage Reduction %", "Damage_Reduction_Percentage_Physical" },
-            { "Arcane Damage Reduction %", "Damage_Reduction_Percentage_Arcane" },
-            { "Elemental Damage Reduction %", "Damage_Reduction_Percentage_Elemental" },
-            { "Noxious Damage Reduction %", "Damage_Reduction_Percentage_Noxious" },
+            { "FlurryMult", "Flurry Multiplier" },
+            { "Haste", "Haste" },
+            { "Hate_Mod", "Hate" },
+            { "HealthRange", "Max Health" },
+            { "Houses", "Houses" },
+            { "HP_Regen", "HP Regen" },
+            { "Intelligence", "Intelligence" },
+            { "Lethality", "Lethality" },
+            { "LethalityPercent", "Lethality %" },
+            { "LifetimeStatus", "Lifetime Status" },
+            { "Noxious", "Noxious Mit" },
+            { "Physical", "Physical Mit" },
+            { "Potency", "Potency" },
+            { "Power", "Power Mit" },
+            { "Power_Regen", "Power Regen" },
+            { "PowerRange", "Max Mana" },
+            { "Primary_Damage_Range", "Primary Range" },
+            { "Primary_Delay", "Primary Delay" },
+            { "PvP_Critical_Mitigation", "PvP Crit Mit" },
+            { "PVPSpellDoubleAttack", "PvP Doublecast" },
+            { "Ranged_Damage_Range", "Ranged Range" },
+            { "Ranged_Delay", "Ranged Delay" },
+            { "Ranged_Double_Atk_Percent", "Ranged Doublecast" },
+            { "Resolve", "Resolve" },
+            { "Run_Speed", "Run Speed" },
+            { "Secondary_Damage_Range", "Secondary Range" },
+            { "Secondary_Delay", "Secondary Delay" },
+            { "Shield_Effectiveness", "Shield Effectiveness" },
+            { "Spell_Cast_Percent", "Casting Speed" },
+            { "Spell_Recovery_Percent", "Recovery Speed" },
+            { "Spell_Reuse_Percent", "Reuse Speed" },
+            { "Spell_Reuse_Spell_Only", "Spell Reuse" },
+            { "SpellDoubleAttack", "Spell Doublecast" },
+            { "Stamina", "Stamina" },
+            { "Strength", "Strength" },
+            { "Strikethrough", "Strikethrough" },
+            { "TradeskillXPMod", "Tradeskill XP Mod" },
+            { "TradeskillXPModCap", "Tradeskill XP Mod Cap" },
+            { "Weapon_Damage_Bonus", "Weapon Damage Bonus" },
+            { "Wisdom", "Wisdom" }
         };
+        private static Dictionary<string, StatterStat> _cachedStats = new Dictionary<string, StatterStat>();
 
         public StatterStat(string name)
         {
-            if (!ClientAttributeLookupTable.ContainsKey(name))
-                throw new Exception("Unknown stat: " + name);
+            if (!StatKeyToFriendlyNames.ContainsValue(name))
+                throw new Exception("Unknown name for stat: " + name);
 
             _name = name;
-            _clientAttribute = ClientAttributeLookupTable[_name];
+            _key = GetKeyForStatName(name);
+            if (_key == null)
+                throw new Exception("Unable to find key for stat: " + name);
 
             Colour = DEFAULT_COLOUR;
+
+            // Cache some stats whenever they're created.
+            if (!_cachedStats.ContainsKey(_key))
+                _cachedStats.Add(_key, this);
+        }
+
+        private string GetKeyForStatName(string name)
+        {
+            foreach (KeyValuePair<string, string> kvp in StatKeyToFriendlyNames)
+                if (kvp.Value == name)
+                    return kvp.Key;
+
+            return null;
         }
 
         public override bool Equals(object obj)
@@ -76,99 +142,30 @@ namespace ACT_Plugin.Model
             return Name.GetHashCode();
         }
 
-        // Return a list of stat names we know how to track
-        public static List<string> GetKnownStats()
+        public static StatterStat GetStatForKey(string key)
         {
-            List<string> knownStats = new List<string>();
+            if (_cachedStats.ContainsKey(key))
+                return _cachedStats[key];
 
-            foreach (string key in ClientAttributeLookupTable.Keys)
-                knownStats.Add(key);
-
-            return knownStats;
+            string name = "Unknown";
+            if (StatKeyToFriendlyNames.ContainsKey(key))
+            {
+                name = StatKeyToFriendlyNames[key];
+            }
+            return new StatterStat(name);
         }
 
         // Return a list of stat names we know how to track, minus the ones specified
-        public static List<string> GetAvailableStats(List<string> usedStats)
+        public static List<string> GetAvailableStatNames(List<string> usedStats)
         {
             List<string> availableStats = new List<string>();
 
-            foreach (string stat in GetKnownStats())
+            foreach (string stat in StatKeyToFriendlyNames.Values)
                 if (!usedStats.Contains(stat))
                     availableStats.Add(stat);
 
+            availableStats.Sort();
             return availableStats;
-        }
-
-        // Extract a single value from the logline, and record it
-        public void ParseReading(string reading, DateTime time)
-        {
-            double temp = 0;
-            string[] parts;
-
-            // Thanks Doxiah for the following fix for languages that use ',' and '.' differently
-            // thanks english in decimal numbers:
-            System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
-
-            switch (_clientAttribute)
-            {
-                case "HealthRange":
-                case "PowerRange":
-                    parts = reading.Split(new string[] { " ", "-", "/" }, StringSplitOptions.RemoveEmptyEntries);
-                    if (parts.Length >= 2 && double.TryParse(parts[1], out temp))
-                        AddReading(temp, time);
-                    break;
-                default:
-                    string cleaned = reading.Replace("%", "");
-                    if (double.TryParse(cleaned, out temp))
-                        AddReading(temp, time);
-                    break;
-            }
-        }
-
-        public void ClearReadings()
-        {
-            _readings.Clear();
-        }
-
-        // Get the reading at or immediately before the time specified
-        public StatterStatReading GetReading(DateTime time)
-        {
-            return _readings.FindLast(x => { return x.Time <= time; });
-        }
-
-        // Get the largest reading during time specified
-        public StatterStatReading GetMaxReading(DateTime start, DateTime end)
-        {
-            StatterStatReading maxReading = null;
-
-            foreach (StatterStatReading reading in _readings)
-                if (reading.Time >= start && reading.Time <= end && (maxReading == null || reading.Value > maxReading.Value))
-                    maxReading = reading;
-
-            return maxReading;
-        }
-
-        // Get the smallest reading during time specified
-        public StatterStatReading GetMinReading(DateTime start, DateTime end)
-        {
-            StatterStatReading minReading = null;
-
-            foreach (StatterStatReading reading in _readings)
-                if (reading.Time >= start && reading.Time <= end && (minReading == null || reading.Value < minReading.Value))
-                    minReading = reading;
-
-            return minReading;
-        }
-
-        public List<StatterStatReading> GetReadings(DateTime start, DateTime end)
-        {
-            return _readings.FindAll(x => { return x.Time >= start && x.Time <= end; });
-        }
-
-        private void AddReading(double value, DateTime time)
-        {
-            StatterStatReading reading = new StatterStatReading() { Value = value, Time = time };
-            _readings.Add(reading);
         }
     }
 }
