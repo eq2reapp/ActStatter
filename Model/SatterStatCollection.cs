@@ -23,7 +23,29 @@ namespace ActStatter.Model
 
         public List<StatterStatReading> GetReadings(DateTime start, DateTime end)
         {
-            return _readings.Where(x => x.Time >= start && x.Time <= end).ToList();
+            var readings = _readings.Where(x => x.Time >= start && x.Time <= end).ToList();
+
+            // For each stat, if that stat has readings from Darq, only include those. This
+            // is so that we can reliably show ocercap info.
+            Dictionary<string, bool> statsFromDarq = new Dictionary<string, bool>();
+            foreach (var reading in readings)
+            {
+                if (!statsFromDarq.ContainsKey(reading.Stat.Key))
+                    statsFromDarq.Add(reading.Stat.Key, false);
+
+                if (reading.Source == StatterStatReading.StatSource.Darq)
+                    statsFromDarq[reading.Stat.Key] = true;
+            }
+
+            List<StatterStatReading> filteredRadings = new List<StatterStatReading>();
+            for (int i = 0; i < readings.Count; i++)
+            {
+                var reading = readings[i];
+                if (!statsFromDarq[reading.Stat.Key] || reading.Source == StatterStatReading.StatSource.Darq)
+                    filteredRadings.Add(reading);
+            }
+
+            return filteredRadings;
         }
 
         // Add a reading in the current stats group and return true if there's space for more.
@@ -42,7 +64,8 @@ namespace ActStatter.Model
         {
             try
             {
-                _readings.Add(ParseDarqReading(logLine, detectedTime));
+                var reading = ParseDarqReading(logLine, detectedTime);
+                _readings.Add(reading);
             }
             catch { }
         }
@@ -95,7 +118,7 @@ namespace ActStatter.Model
                     Time = logTime
                 };
 
-                string cleaned = parts[2].Replace("%", "");
+                string cleaned = parts[2].Replace("%", "").Replace(",", "");
                 if (double.TryParse(cleaned, out temp))
                     reading.Value = temp;
 
@@ -104,6 +127,14 @@ namespace ActStatter.Model
 
                 if (parts.Length >= 5)
                     stat.Colour = ColorTranslator.FromHtml(parts[4]);
+
+                if (stat.Key == "CurrentHealth")
+                {
+                    Int64 restored = Convert.ToInt64(temp);
+                    restored &= 0xFFFFFFFF;
+                    reading.Value = Convert.ToDouble(restored);
+                    reading.Overcap = false; // Override this since it doesn't make sense to be OC
+                }
             }
 
             return reading;

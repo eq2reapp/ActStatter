@@ -57,10 +57,7 @@ namespace ActStatter.UI
             ShowInstructions();
 
             chkParseOnImport.Checked = _settings.ParseOnImport;
-            chkSteppedLines.Checked = _settings.StepLines;
             SetSelectedStats();
-
-            btnTestGraph.Visible = StatterMain.DEBUG;
 
             _loading = false;
         }
@@ -157,15 +154,6 @@ Finally, note that /do_file_commands currently limits the number of stats that c
         private void chkParseOnImport_CheckedChanged(object sender, EventArgs e)
         {
             _settings.ParseOnImport = chkParseOnImport.Checked;
-            if (!_loading)
-            {
-                _settings.Save();
-            }
-        }
-
-        private void chkSteppedLines_CheckedChanged(object sender, EventArgs e)
-        {
-            _settings.StepLines = chkSteppedLines.Checked;
             if (!_loading)
             {
                 _settings.Save();

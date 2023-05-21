@@ -1,9 +1,10 @@
-﻿using System;
+﻿using ActStatter.Model;
+using ActStatter.Util;
+using Advanced_Combat_Tracker;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Windows.Forms;
-using Advanced_Combat_Tracker;
-using ActStatter.Model;
 
 namespace ActStatter.UI
 {
@@ -14,24 +15,25 @@ namespace ActStatter.UI
         private DateTime _end = DateTime.MinValue;
         private string _title = "";
         private StatterMain _statter = null;
-        private StatterSettings _settings = null;
+        private EncounterData _encData = null;
+        private StatterSettings _settings = new StatterSettings();
 
         public StatterViewStatsForm(StatterMain statter, StatterSettings settings)
         {
-            InitializeComponent();
-
             _statter = statter;
             _settings = settings;
-            statGraph.ShowSteppedStatLines = _settings.StepLines;
+
+            InitializeComponent();
+            statGraph.UseSettings(_settings);
         }
 
         private void ViewStats_Load(object sender, EventArgs e)
         {
+            chkShowAverage.Checked = _settings.GraphShowAverage;
+            chkShowEncDps.Checked = _settings.GraphShowEncDps;
         }
 
-        // When the user selects one or more stats in the datagrid, render a graph
-        // for the selected stats
-        private void dgStats_SelectionChanged(object sender, EventArgs e)
+        private void UpdateGraph()
         {
             List<StatterEncounterStat> selectedStats = new List<StatterEncounterStat>();
 
@@ -48,11 +50,21 @@ namespace ActStatter.UI
             }
 
             if (selectedStats.Count > 0)
-                statGraph.DrawStats(selectedStats, _start, _end);
+            {
+                statGraph.DrawStats(selectedStats, _start, _end, _encData);
+            }
+        }
+
+        // When the user selects one or more stats in the datagrid, render a graph
+        // for the selected stats
+        private void dgStats_SelectionChanged(object sender, EventArgs e)
+        {
+            UpdateGraph();
         }
 
         public void ShowStats(List<StatterStatReading> readings, EncounterData encounterData)
         {
+            _encData = encounterData;
             _start = encounterData.StartTime;
             _end = encounterData.EndTime;
             _title = string.Format("{0} - {1}", encounterData.ZoneName, encounterData.Title);
@@ -71,7 +83,8 @@ namespace ActStatter.UI
                     {
                         Stat = reading.Stat,
                         Readings = new List<StatterStatReading>(),
-                        AvgReading = new StatterStatReading()
+                        AvgReading = new StatterStatReading(),
+                        PercentOvercap = new StatterStatReading()
                     };
                     _stats.Add(encStat);
                 }
@@ -79,23 +92,61 @@ namespace ActStatter.UI
                 encStat.Readings.Add(reading);
             }
 
-            // Iterate over the stats and do some high-level calculations.
+            // Iterate over the stats and do some high-level calculations and filtering
+            double encounterDurationSeconds = (_end - _start).TotalSeconds;
             foreach (StatterEncounterStat encStat in _stats)
             {
-                double statSum = 0;
-                foreach (StatterStatReading reading in encStat.Readings)
-                {
-                    if (encStat.MinReading == null || reading.Value < encStat.MinReading.Value)
-                        encStat.MinReading = reading;
-
-                    if (encStat.MaxReading == null || reading.Value > encStat.MaxReading.Value)
-                        encStat.MaxReading = reading;
-
-                    statSum += reading.Value;
-                }
                 if (encStat.Readings.Count > 0)
                 {
-                    encStat.AvgReading.Value = (statSum / encStat.Readings.Count);
+                    // Filter out any readings that occur more than once a second (take the latest)
+                    // since that will make the graph dippy.
+                    List<StatterStatReading> filteredReadings = new List<StatterStatReading>();
+                    for (int i = 0; i < encStat.Readings.Count; i++)
+                        if (i == encStat.Readings.Count - 1 ||
+                            encStat.Readings[i].Time != encStat.Readings[i + 1].Time)
+                        {
+                            filteredReadings.Add(encStat.Readings[i]);
+                        }
+                    encStat.Readings = filteredReadings;
+
+                    StatterStatReading prevReading = null;
+                    StatterStatReading curReading;
+                    double curDuration;
+                    double statSum = 0.0;
+                    double ocTime = 0.0;
+                    for (int i = 0; i < encStat.Readings.Count; i++)
+                    {
+                        curReading = encStat.Readings[i];
+                        if (i == 0)
+                        {
+                            curDuration = curReading.Time.Subtract(_start).TotalSeconds;
+                            statSum += curDuration * curReading.Value;
+                        }
+                        else
+                        {
+                            curDuration = curReading.Time.Subtract(prevReading.Time).TotalSeconds;
+                            statSum += curDuration * prevReading.Value;
+                        }
+
+                        if (encStat.MinReading == null || curReading.Value < encStat.MinReading.Value)
+                            encStat.MinReading = curReading;
+
+                        if (encStat.MaxReading == null || curReading.Value > encStat.MaxReading.Value)
+                            encStat.MaxReading = curReading;
+
+                        if (curReading.Overcap)
+                            ocTime += curDuration;
+
+                        prevReading = curReading;
+                    }
+                    // Add the last reading until the encounter end
+                    curDuration = _end.Subtract(prevReading.Time).TotalSeconds;
+                    statSum += curDuration * prevReading.Value;
+                    if (prevReading.Overcap)
+                        ocTime += curDuration;
+
+                    encStat.AvgReading.Value = (statSum / encounterDurationSeconds);
+                    encStat.PercentOvercap.Value = (ocTime / encounterDurationSeconds) * 100;
                 }
             }
 
@@ -109,16 +160,19 @@ namespace ActStatter.UI
             dt.Columns.Add("Min", typeof(string));
             dt.Columns.Add("Max", typeof(string));
             dt.Columns.Add("Avg", typeof(string));
+            dt.Columns.Add("OC", typeof(string));
 
             if ((_end - _start).TotalSeconds > 1)
             {
+                _stats.Sort((x, y) => x.Stat.Name.CompareTo(y.Stat.Name));
                 foreach (StatterEncounterStat stat in _stats)
                 {
-                    DataRow dr = dt.Rows.Add(new object[] { 
-                        stat.Stat.Name, 
-                        stat.MinReading == null ? "" : stat.MinReading.Value.ToString("0"), 
-                        stat.MaxReading == null ? "" : stat.MaxReading.Value.ToString("0"),
-                        stat.AvgReading == null ? "" : stat.AvgReading.Value.ToString("0"),
+                    DataRow dr = dt.Rows.Add(new object[] {
+                        stat.Stat.Name,
+                        stat.MinReading == null ? "" : Formatters.GetReadableNumber(stat.MinReading.Value),
+                        stat.MaxReading == null ? "" : Formatters.GetReadableNumber(stat.MaxReading.Value),
+                        stat.AvgReading == null ? "" : Formatters.GetReadableNumber(stat.AvgReading.Value),
+                        stat.PercentOvercap == null ? "" : stat.PercentOvercap.Value.ToString("0") + "%",
                     });
                 }
 
@@ -127,6 +181,22 @@ namespace ActStatter.UI
             }
 
             this.Show();
+        }
+
+        private void chkShowEncDps_CheckedChanged(object sender, EventArgs e)
+        {
+            _settings.GraphShowEncDps = chkShowEncDps.Checked;
+            _settings.Save();
+
+            UpdateGraph();
+        }
+
+        private void chkShowAverage_CheckedChanged(object sender, EventArgs e)
+        {
+            _settings.GraphShowAverage = chkShowAverage.Checked;
+            _settings.Save();
+
+            UpdateGraph();
         }
     }
 }

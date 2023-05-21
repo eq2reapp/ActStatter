@@ -9,5 +9,6 @@ namespace ActStatter.Model
         public StatterStatReading MinReading { get; set; }
         public StatterStatReading MaxReading { get; set; }
         public StatterStatReading AvgReading { get; set; }
+        public StatterStatReading PercentOvercap { get; set; }
     }
 }

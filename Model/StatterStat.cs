@@ -87,7 +87,7 @@ namespace ActStatter.Model
             { "Run_Speed", "Run Speed" },
             { "Secondary_Damage_Range", "Secondary Range" },
             { "Secondary_Delay", "Secondary Delay" },
-            { "Shield_Effectiveness", "Shield Effectiveness" },
+            { "Shield_Effectiveness", "Block %" },
             { "Spell_Cast_Percent", "Casting Speed" },
             { "Spell_Recovery_Percent", "Recovery Speed" },
             { "Spell_Reuse_Percent", "Reuse Speed" },
@@ -105,13 +105,10 @@ namespace ActStatter.Model
 
         public StatterStat(string name)
         {
-            if (!StatKeyToFriendlyNames.ContainsValue(name))
-                throw new Exception("Unknown name for stat: " + name);
-
             _name = name;
             _key = GetKeyForStatName(name);
             if (_key == null)
-                throw new Exception("Unable to find key for stat: " + name);
+                _key = name.Replace(" ", "").Replace("%", "Pct");
 
             Colour = DEFAULT_COLOUR;
 
@@ -147,7 +144,7 @@ namespace ActStatter.Model
             if (_cachedStats.ContainsKey(key))
                 return _cachedStats[key];
 
-            string name = "Unknown";
+            string name = key;
             if (StatKeyToFriendlyNames.ContainsKey(key))
             {
                 name = StatKeyToFriendlyNames[key];

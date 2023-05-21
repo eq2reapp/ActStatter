@@ -90,6 +90,7 @@
     <Compile Include="UI\StatterViewStatsForm.Designer.cs">
       <DependentUpon>StatterViewStatsForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Util\Formatters.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="UI\StatterAddStatForm.resx">

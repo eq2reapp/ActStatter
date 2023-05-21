@@ -13,32 +13,41 @@ namespace ActStatter
 {
     public class StatterSettings
     {
-        private string _settingsFile = Path.Combine(ActGlobals.oFormActMain.AppDataFolder.FullName, "Config\\Statter.config.xml");
+        private string _settingsFile = null;
 
         public bool ParseOnImport = true;
-        public bool StepLines = true;
+        public bool GraphShowAverage = true;
+        public bool GraphShowEncDps = true;
         public List<StatterStat> Stats = new List<StatterStat>();
 
         public StatterSettings()
         {
+            try
+            {
+                _settingsFile = Path.Combine(ActGlobals.oFormActMain.AppDataFolder.FullName, "Config\\Statter.config.xml");
+            }
+            catch { }
         }
 
         public void Load()
         {
-            if (!File.Exists(_settingsFile)) return;
+            if (_settingsFile == null || !File.Exists(_settingsFile)) return;
 
             XmlDocument doc = new XmlDocument();
             doc.Load(_settingsFile);
             XmlNode rootNode = doc.SelectSingleNode("Settings");
 
             ParseOnImport = RetrieveSetting<bool>(rootNode, "ParseOnImport");
-            StepLines = RetrieveSetting<bool>(rootNode, "StepLines");
+            GraphShowAverage = RetrieveSetting<bool>(rootNode, "GraphShowAverage");
+            GraphShowEncDps = RetrieveSetting<bool>(rootNode, "GraphShowEncDps");
 
             LoadStats(rootNode.SelectSingleNode("Stats"));
         }
 
         public void Save()
         {
+            if (_settingsFile == null || !File.Exists(_settingsFile)) return;
+
             XmlDocument doc = new XmlDocument();
             doc.AppendChild(doc.CreateXmlDeclaration("1.0", null, null));
 
@@ -46,7 +55,8 @@ namespace ActStatter
             doc.AppendChild(rootNode);
 
             AttachChildNode(rootNode, "ParseOnImport", ParseOnImport.ToString());
-            AttachChildNode(rootNode, "StepLines", StepLines.ToString());
+            AttachChildNode(rootNode, "GraphShowAverage", GraphShowAverage.ToString());
+            AttachChildNode(rootNode, "GraphShowEncDps", GraphShowEncDps.ToString());
 
             XmlElement statsNode = AttachChildNode(rootNode, "Stats", null);
             SaveStats(statsNode);
@@ -59,7 +69,8 @@ namespace ActStatter
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("Settings:");
             sb.AppendLine("  ParseOnImport = " + ParseOnImport);
-            sb.AppendLine("  StepLines = " + StepLines);
+            sb.AppendLine("  GraphShowAverage = " + GraphShowAverage);
+            sb.AppendLine("  GraphShowEncDps = " + GraphShowEncDps);
             List<string> _trackedStats = new List<string>();
             foreach (StatterStat stat in Stats)
             {
