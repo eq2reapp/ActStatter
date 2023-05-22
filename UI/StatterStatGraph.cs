@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using Advanced_Combat_Tracker;
@@ -17,8 +18,14 @@ namespace ActStatter.UI
             public float Width;
             public int Alpha = 255;
         }
+        private class GraphPin
+        {
+            public Point Point;
+            public string Label;
+        }
 
         private StatterSettings _settings = new StatterSettings();
+        private List<GraphPin> _pins = new List<GraphPin>();
 
         // Global margins surrounding the graph area (used for labels)
         private const int MARGIN_DATA_X_LEFT = 55;
@@ -52,16 +59,12 @@ namespace ActStatter.UI
         private double _valueAverage = -1;
 
         // Data for rendering enc dpc overlay
-        private int _rollingDpsPeriodSec = 10;
         private Dictionary<int, double> _encDps = new Dictionary<int, double>();
         private double _maxDps = double.MinValue;
         private double _maxDpsScale = 3;
 
         // The off-screen drawing buffer where renders are prepared
         private Bitmap _buff = null;
-
-        // Some state for mouse hover drawing
-        private bool _crosshairsPinned = false;
 
         // Some shorthands for rendering text
         private StringFormat _sfNearNear = new StringFormat();
@@ -144,9 +147,6 @@ namespace ActStatter.UI
         {
             if (this.Width < 1 || this.Height < 1) return;
 
-            // Don't update if the mouse has clicked to "pin" the crosshairs
-            if (_crosshairsPinned) return;
-
             int x = Math.Min(DataRight + 1, Math.Max(DataLeft - 1, e.X));
             int y = Math.Min(DataBottom + 1, Math.Max(DataTop - 1, e.Y));
             Point boundedLocation = new Point(x, y);
@@ -163,6 +163,7 @@ namespace ActStatter.UI
                 {
                     gBuff.DrawLine(_pCrosshair, x, DataTop, x, DataBottom);
                     DateTime timeAtPos = GetTimeAt(boundedLocation);
+
                     gBuff.DrawString(string.Format("{0} ({1})", 
                             timeAtPos.ToString("h':'mm':'ss"), 
                             GetOffsetString(timeAtPos)),
@@ -183,7 +184,24 @@ namespace ActStatter.UI
         {
             if (this.Width < 1 || this.Height < 1) return;
 
-            _crosshairsPinned = !_crosshairsPinned;
+            int x = Math.Min(DataRight + 1, Math.Max(DataLeft - 1, e.X));
+            int y = Math.Min(DataBottom + 1, Math.Max(DataTop - 1, e.Y));
+            if (e.Button == MouseButtons.Left && y >= DataTop && y <= DataBottom)
+            {
+                Point boundedLocation = new Point(x, y);
+                string readableVal = Formatters.GetReadableNumber(GetValueAt(boundedLocation));
+                _pins.Add(new GraphPin()
+                {
+                    Point = boundedLocation,
+                    Label = readableVal
+                });
+                UpdateGraph();
+            }
+            else
+            {
+                _pins.Clear();
+                UpdateGraph();
+            }
         }
 
         private void picMain_Paint(object sender, PaintEventArgs e)
@@ -315,8 +333,14 @@ namespace ActStatter.UI
                         measurementLines.Add(ShiftLines(verticalLines, 0, 0), new LineOptions() { Color = encStat.Stat.Colour, Width = LINE_NON_OC_WIDTH });
                     }
 
-                //RenderLines(g, shadowLines);
                 RenderLines(g, measurementLines);
+
+                // Render pins
+                foreach (var pin in _pins)
+                {
+                    g.DrawLine(_pCrosshair, DataLeft, pin.Point.Y, DataRight, pin.Point.Y);
+                    g.DrawString(pin.Label, this.Font, SystemBrushes.Highlight, DataRight + 5, pin.Point.Y, _sfNearMid);
+                }
             }
 
             SwapBuff(buff);
@@ -433,16 +457,19 @@ namespace ActStatter.UI
             StringBuilder sb = new StringBuilder();
 
             // Append duration in format h:mm:ss
-            sb.Append("+");
-            if (tsOffset.Hours > 0)
-                sb.Append(tsOffset.Hours).Append(":");
-            if (tsOffset.Minutes > 0)
-                sb.Append(sb.Length > 0 ? tsOffset.Minutes.ToString().PadLeft(2, '0') : tsOffset.Minutes.ToString()).Append(":");
-            sb.Append(sb.Length > 0 ? tsOffset.Seconds.ToString().PadLeft(2, '0') : tsOffset.Seconds.ToString());
+            if (tsOffset.TotalSeconds > 60)
+            {
+                sb.Append("+");
+                if (tsOffset.Hours > 0)
+                    sb.Append(tsOffset.Hours).Append(":");
+                if (tsOffset.Minutes > 0)
+                    sb.Append(sb.Length > 0 ? tsOffset.Minutes.ToString().PadLeft(2, '0') : tsOffset.Minutes.ToString()).Append(":");
+                sb.Append(sb.Length > 0 ? tsOffset.Seconds.ToString().PadLeft(2, '0') : tsOffset.Seconds.ToString());
+                sb.Append(" / ");
+            }
 
-            // Append duration in format ss
-            sb.Append(" / +");
-            sb.Append(Math.Floor(tsOffset.TotalSeconds).ToString("0"));
+            // Also append duration in total elapsed seconds
+            sb.Append("+" + Math.Floor(tsOffset.TotalSeconds).ToString("0"));
 
             return sb.ToString();
         }
@@ -455,6 +482,12 @@ namespace ActStatter.UI
         // This is the main draw routine. Calculate some state values, then render and display the buffer
         public void DrawStats(List<StatterEncounterStat> stats, DateTime startTime, DateTime endTime, EncounterData encData)
         {
+            // Don't clear th pins if the stats are the same
+            var curStatKeys = _stats.Aggregate("", (acc, x) => acc += x.Stat.Key);
+            var newStatKeys = stats.Aggregate("", (acc, x) => acc += x.Stat.Key);
+            if (curStatKeys != newStatKeys)
+                _pins.Clear();
+
             _stats = stats;
             _startTime = startTime;
             _endTime = endTime;
@@ -484,8 +517,16 @@ namespace ActStatter.UI
 
             // Calculate enc dps
             _encDps.Clear();
+            _maxDps = 0;
             if (_settings.GraphShowEncDps)
             {
+                // To generate the dps graph, just sum up the damage done each second
+                // over the duration of the enncounter. Then pass back over and accumulate
+                // damage done in the last n seconds, where n is controlled by the resoltion
+                // slider. ACT uses 10 sec in its own graphs (which is the max duration we use,
+                // corresponding to the "lowest" resolution.
+                // Convert the resolution slider (min 1, max 10) to the accumulation period:
+                int accumulateSeconds = 1 + (10 - _settings.EncDpsResolution);
                 List<MasterSwing> attacks = null;
                 foreach (var combatant in encData.Items)
                     if (combatant.Key.Equals(encData.CharName.ToUpper()))
@@ -506,12 +547,12 @@ namespace ActStatter.UI
                     for (int i = 0; i < encDurationSec; i++)
                     {
                         double damageInRollingPeriod = 0;
-                        for (int j = i; j > (i - _rollingDpsPeriodSec) && j >= 0; j--)
+                        for (int j = i; j > (i - accumulateSeconds) && j >= 0; j--)
                             damageInRollingPeriod += damageAtSecond[j];
-                        double dps = damageInRollingPeriod / (_rollingDpsPeriodSec * 1.0);
+                        double dps = damageInRollingPeriod / (accumulateSeconds * 1.0);
                         if (dps > _maxDps)
                             _maxDps = dps;
-                        _encDps.Add(i, dps); ;
+                        _encDps.Add(i, dps);
                     }
                 }
             }
@@ -521,8 +562,6 @@ namespace ActStatter.UI
 
         public void UpdateGraph()
         {
-            _crosshairsPinned = false;
-
             Render();
             Refresh();
         }

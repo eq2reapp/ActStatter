@@ -36,7 +36,6 @@
             this.tabExtra = new System.Windows.Forms.TabControl();
             this.tabInstructions = new System.Windows.Forms.TabPage();
             this.pnlInstructions = new System.Windows.Forms.Panel();
-            this.txtInstructions = new System.Windows.Forms.RichTextBox();
             this.tabLogs = new System.Windows.Forms.TabPage();
             this.btnRefresh = new System.Windows.Forms.Button();
             this.btnCopyLogs = new System.Windows.Forms.Button();
@@ -44,6 +43,7 @@
             this.grpTrackedStats = new System.Windows.Forms.GroupBox();
             this.pnlStatDetails = new System.Windows.Forms.FlowLayoutPanel();
             this.btnAdd = new System.Windows.Forms.Button();
+            this.lnkOpenHelp = new System.Windows.Forms.LinkLabel();
             this.pnlMain.SuspendLayout();
             this.grpStatterConfig.SuspendLayout();
             this.grpGeneralOptions.SuspendLayout();
@@ -140,26 +140,13 @@
             // pnlInstructions
             // 
             this.pnlInstructions.BackColor = System.Drawing.SystemColors.Window;
-            this.pnlInstructions.Controls.Add(this.txtInstructions);
+            this.pnlInstructions.Controls.Add(this.lnkOpenHelp);
             this.pnlInstructions.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pnlInstructions.Location = new System.Drawing.Point(3, 3);
             this.pnlInstructions.Name = "pnlInstructions";
             this.pnlInstructions.Padding = new System.Windows.Forms.Padding(5);
             this.pnlInstructions.Size = new System.Drawing.Size(565, 580);
             this.pnlInstructions.TabIndex = 13;
-            // 
-            // txtInstructions
-            // 
-            this.txtInstructions.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            this.txtInstructions.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.txtInstructions.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.txtInstructions.Font = new System.Drawing.Font("Corbel", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtInstructions.Location = new System.Drawing.Point(5, 5);
-            this.txtInstructions.Name = "txtInstructions";
-            this.txtInstructions.ReadOnly = true;
-            this.txtInstructions.Size = new System.Drawing.Size(555, 570);
-            this.txtInstructions.TabIndex = 12;
-            this.txtInstructions.Text = "";
             // 
             // tabLogs
             // 
@@ -246,6 +233,19 @@
             this.btnAdd.UseVisualStyleBackColor = true;
             this.btnAdd.Click += new System.EventHandler(this.btnAdd_Click);
             // 
+            // lnkOpenHelp
+            // 
+            this.lnkOpenHelp.ActiveLinkColor = System.Drawing.Color.Blue;
+            this.lnkOpenHelp.AutoSize = true;
+            this.lnkOpenHelp.Location = new System.Drawing.Point(18, 18);
+            this.lnkOpenHelp.Name = "lnkOpenHelp";
+            this.lnkOpenHelp.Size = new System.Drawing.Size(166, 13);
+            this.lnkOpenHelp.TabIndex = 0;
+            this.lnkOpenHelp.TabStop = true;
+            this.lnkOpenHelp.Text = "Open a help page in your browser";
+            this.lnkOpenHelp.VisitedLinkColor = System.Drawing.Color.Blue;
+            this.lnkOpenHelp.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.lnkOpenHelp_LinkClicked);
+            // 
             // StatterPluginTab
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -262,6 +262,7 @@
             this.tabExtra.ResumeLayout(false);
             this.tabInstructions.ResumeLayout(false);
             this.pnlInstructions.ResumeLayout(false);
+            this.pnlInstructions.PerformLayout();
             this.tabLogs.ResumeLayout(false);
             this.tabLogs.PerformLayout();
             this.grpTrackedStats.ResumeLayout(false);
@@ -276,7 +277,6 @@
         private System.Windows.Forms.Button btnAdd;
         private System.Windows.Forms.FlowLayoutPanel pnlStatDetails;
         private System.Windows.Forms.GroupBox grpTrackedStats;
-        private System.Windows.Forms.RichTextBox txtInstructions;
         private System.Windows.Forms.Panel pnlInstructions;
         private System.Windows.Forms.Panel pnlInstructionsContainer;
         private System.Windows.Forms.GroupBox grpGeneralOptions;
@@ -287,5 +287,6 @@
         private System.Windows.Forms.TextBox txtLogs;
         private System.Windows.Forms.Button btnCopyLogs;
         private System.Windows.Forms.Button btnRefresh;
+        private System.Windows.Forms.LinkLabel lnkOpenHelp;
     }
 }

@@ -18,6 +18,7 @@ namespace ActStatter
         public bool ParseOnImport = true;
         public bool GraphShowAverage = true;
         public bool GraphShowEncDps = true;
+        public int EncDpsResolution = 1;
         public List<StatterStat> Stats = new List<StatterStat>();
 
         public StatterSettings()
@@ -40,6 +41,7 @@ namespace ActStatter
             ParseOnImport = RetrieveSetting<bool>(rootNode, "ParseOnImport");
             GraphShowAverage = RetrieveSetting<bool>(rootNode, "GraphShowAverage");
             GraphShowEncDps = RetrieveSetting<bool>(rootNode, "GraphShowEncDps");
+            EncDpsResolution = Math.Max(1, RetrieveSetting<int>(rootNode, "EncDpsResolution"));
 
             LoadStats(rootNode.SelectSingleNode("Stats"));
         }
@@ -57,6 +59,7 @@ namespace ActStatter
             AttachChildNode(rootNode, "ParseOnImport", ParseOnImport.ToString());
             AttachChildNode(rootNode, "GraphShowAverage", GraphShowAverage.ToString());
             AttachChildNode(rootNode, "GraphShowEncDps", GraphShowEncDps.ToString());
+            AttachChildNode(rootNode, "EncDpsResolution", EncDpsResolution.ToString());
 
             XmlElement statsNode = AttachChildNode(rootNode, "Stats", null);
             SaveStats(statsNode);
@@ -71,6 +74,7 @@ namespace ActStatter
             sb.AppendLine("  ParseOnImport = " + ParseOnImport);
             sb.AppendLine("  GraphShowAverage = " + GraphShowAverage);
             sb.AppendLine("  GraphShowEncDps = " + GraphShowEncDps);
+            sb.AppendLine("  EncDpsResolution = " + EncDpsResolution.ToString());
             List<string> _trackedStats = new List<string>();
             foreach (StatterStat stat in Stats)
             {

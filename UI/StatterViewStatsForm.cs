@@ -4,6 +4,7 @@ using Advanced_Combat_Tracker;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Text;
 using System.Windows.Forms;
 
 namespace ActStatter.UI
@@ -31,6 +32,20 @@ namespace ActStatter.UI
         {
             chkShowAverage.Checked = _settings.GraphShowAverage;
             chkShowEncDps.Checked = _settings.GraphShowEncDps;
+            sliderEncDpsResolution.Value =
+                Math.Min(sliderEncDpsResolution.Maximum, 
+                         Math.Max(sliderEncDpsResolution.Minimum, _settings.EncDpsResolution));
+
+            StringBuilder sbNotes = new StringBuilder();
+            if (_statter.DarqUIDetected)
+            {
+                sbNotes.AppendLine("Overcapped stats are shown as thicker line segments in the graph. Only stats from DarqUI can report overcap status.");
+                sbNotes.AppendLine();
+            }
+            sbNotes.AppendLine("The shaded area under the graph line represents the average value over the full duration (if enabled).");
+            sbNotes.AppendLine();
+            sbNotes.AppendLine("Click inside the graph to set a line marker for the stat value. Right-click to clear all markers.");
+            lblNotes.Text = sbNotes.ToString();
         }
 
         private void UpdateGraph()
@@ -160,20 +175,23 @@ namespace ActStatter.UI
             dt.Columns.Add("Min", typeof(string));
             dt.Columns.Add("Max", typeof(string));
             dt.Columns.Add("Avg", typeof(string));
-            dt.Columns.Add("OC", typeof(string));
+            if (_statter.DarqUIDetected)
+                dt.Columns.Add("OC", typeof(string));
 
             if ((_end - _start).TotalSeconds > 1)
             {
                 _stats.Sort((x, y) => x.Stat.Name.CompareTo(y.Stat.Name));
                 foreach (StatterEncounterStat stat in _stats)
                 {
-                    DataRow dr = dt.Rows.Add(new object[] {
+                    List<object> values = new List<object>() {
                         stat.Stat.Name,
                         stat.MinReading == null ? "" : Formatters.GetReadableNumber(stat.MinReading.Value),
                         stat.MaxReading == null ? "" : Formatters.GetReadableNumber(stat.MaxReading.Value),
                         stat.AvgReading == null ? "" : Formatters.GetReadableNumber(stat.AvgReading.Value),
-                        stat.PercentOvercap == null ? "" : stat.PercentOvercap.Value.ToString("0") + "%",
-                    });
+                    };
+                    if (_statter.DarqUIDetected)
+                        values.Add(stat.PercentOvercap == null ? "" : stat.PercentOvercap.Value.ToString("0") + "%");
+                    DataRow dr = dt.Rows.Add(values.ToArray());
                 }
 
                 Text = string.Format("Stats for {0:h':'mm':'ss tt} - {1:h':'mm':'ss tt} ({2})", _start, _end, _title);
@@ -194,6 +212,14 @@ namespace ActStatter.UI
         private void chkShowAverage_CheckedChanged(object sender, EventArgs e)
         {
             _settings.GraphShowAverage = chkShowAverage.Checked;
+            _settings.Save();
+
+            UpdateGraph();
+        }
+
+        private void sliderEncDpsResolution_Scroll(object sender, EventArgs e)
+        {
+            _settings.EncDpsResolution = sliderEncDpsResolution.Value;
             _settings.Save();
 
             UpdateGraph();

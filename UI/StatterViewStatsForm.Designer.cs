@@ -28,20 +28,22 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(StatterViewStatsForm));
             this.pnlGraph = new System.Windows.Forms.Panel();
-            this.statGraph = new ActStatter.UI.StatterStatGraph();
             this.pnlGraphControls = new System.Windows.Forms.Panel();
             this.lblNotes = new System.Windows.Forms.Label();
             this.chkShowEncDps = new System.Windows.Forms.CheckBox();
+            this.chkShowAverage = new System.Windows.Forms.CheckBox();
+            this.sliderEncDpsResolution = new System.Windows.Forms.TrackBar();
+            this.lblResolution = new System.Windows.Forms.Label();
+            this.statGraph = new ActStatter.UI.StatterStatGraph();
             this.dgStats = new ActStatter.UI.StatterFastDataGrid();
             this.ColStat = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColMin = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColMax = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Avg = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.OC = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.chkShowAverage = new System.Windows.Forms.CheckBox();
             this.pnlGraph.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.sliderEncDpsResolution)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgStats)).BeginInit();
             this.SuspendLayout();
             // 
@@ -55,34 +57,25 @@
             this.pnlGraph.Location = new System.Drawing.Point(347, 6);
             this.pnlGraph.Name = "pnlGraph";
             this.pnlGraph.Padding = new System.Windows.Forms.Padding(5);
-            this.pnlGraph.Size = new System.Drawing.Size(650, 677);
+            this.pnlGraph.Size = new System.Drawing.Size(656, 679);
             this.pnlGraph.TabIndex = 2;
-            // 
-            // statGraph
-            // 
-            this.statGraph.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.statGraph.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.statGraph.Location = new System.Drawing.Point(5, 5);
-            this.statGraph.Name = "statGraph";
-            this.statGraph.Size = new System.Drawing.Size(640, 667);
-            this.statGraph.TabIndex = 1;
             // 
             // pnlGraphControls
             // 
             this.pnlGraphControls.Dock = System.Windows.Forms.DockStyle.Top;
             this.pnlGraphControls.Location = new System.Drawing.Point(5, 5);
             this.pnlGraphControls.Name = "pnlGraphControls";
-            this.pnlGraphControls.Size = new System.Drawing.Size(640, 0);
+            this.pnlGraphControls.Size = new System.Drawing.Size(646, 0);
             this.pnlGraphControls.TabIndex = 0;
             // 
             // lblNotes
             // 
             this.lblNotes.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.lblNotes.Location = new System.Drawing.Point(12, 512);
+            this.lblNotes.Location = new System.Drawing.Point(12, 514);
             this.lblNotes.Name = "lblNotes";
             this.lblNotes.Size = new System.Drawing.Size(329, 201);
             this.lblNotes.TabIndex = 3;
-            this.lblNotes.Text = resources.GetString("lblNotes.Text");
+            this.lblNotes.Text = "lblNotes is modified on form load\r\n";
             // 
             // chkShowEncDps
             // 
@@ -90,13 +83,58 @@
             this.chkShowEncDps.AutoSize = true;
             this.chkShowEncDps.Checked = true;
             this.chkShowEncDps.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkShowEncDps.Location = new System.Drawing.Point(483, 689);
+            this.chkShowEncDps.Location = new System.Drawing.Point(483, 691);
             this.chkShowEncDps.Name = "chkShowEncDps";
             this.chkShowEncDps.Size = new System.Drawing.Size(97, 17);
             this.chkShowEncDps.TabIndex = 4;
             this.chkShowEncDps.Text = "Show EncDPS";
             this.chkShowEncDps.UseVisualStyleBackColor = true;
             this.chkShowEncDps.CheckedChanged += new System.EventHandler(this.chkShowEncDps_CheckedChanged);
+            // 
+            // chkShowAverage
+            // 
+            this.chkShowAverage.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.chkShowAverage.AutoSize = true;
+            this.chkShowAverage.Checked = true;
+            this.chkShowAverage.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkShowAverage.Location = new System.Drawing.Point(361, 691);
+            this.chkShowAverage.Name = "chkShowAverage";
+            this.chkShowAverage.Size = new System.Drawing.Size(96, 17);
+            this.chkShowAverage.TabIndex = 5;
+            this.chkShowAverage.Text = "Show Average";
+            this.chkShowAverage.UseVisualStyleBackColor = true;
+            this.chkShowAverage.CheckedChanged += new System.EventHandler(this.chkShowAverage_CheckedChanged);
+            // 
+            // sliderEncDpsResolution
+            // 
+            this.sliderEncDpsResolution.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.sliderEncDpsResolution.AutoSize = false;
+            this.sliderEncDpsResolution.Location = new System.Drawing.Point(574, 686);
+            this.sliderEncDpsResolution.Minimum = 1;
+            this.sliderEncDpsResolution.Name = "sliderEncDpsResolution";
+            this.sliderEncDpsResolution.Size = new System.Drawing.Size(104, 30);
+            this.sliderEncDpsResolution.TabIndex = 6;
+            this.sliderEncDpsResolution.Value = 1;
+            this.sliderEncDpsResolution.Scroll += new System.EventHandler(this.sliderEncDpsResolution_Scroll);
+            // 
+            // lblResolution
+            // 
+            this.lblResolution.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.lblResolution.AutoSize = true;
+            this.lblResolution.Location = new System.Drawing.Point(674, 692);
+            this.lblResolution.Name = "lblResolution";
+            this.lblResolution.Size = new System.Drawing.Size(63, 13);
+            this.lblResolution.TabIndex = 7;
+            this.lblResolution.Text = "(Resolution)";
+            // 
+            // statGraph
+            // 
+            this.statGraph.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.statGraph.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.statGraph.Location = new System.Drawing.Point(5, 5);
+            this.statGraph.Name = "statGraph";
+            this.statGraph.Size = new System.Drawing.Size(646, 669);
+            this.statGraph.TabIndex = 1;
             // 
             // dgStats
             // 
@@ -128,7 +166,7 @@
             this.dgStats.ShowCellToolTips = false;
             this.dgStats.ShowEditingIcon = false;
             this.dgStats.ShowRowErrors = false;
-            this.dgStats.Size = new System.Drawing.Size(335, 493);
+            this.dgStats.Size = new System.Drawing.Size(335, 495);
             this.dgStats.TabIndex = 1;
             this.dgStats.SelectionChanged += new System.EventHandler(this.dgStats_SelectionChanged);
             // 
@@ -182,25 +220,13 @@
             this.OC.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             this.OC.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             // 
-            // chkShowAverage
-            // 
-            this.chkShowAverage.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.chkShowAverage.AutoSize = true;
-            this.chkShowAverage.Checked = true;
-            this.chkShowAverage.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkShowAverage.Location = new System.Drawing.Point(361, 689);
-            this.chkShowAverage.Name = "chkShowAverage";
-            this.chkShowAverage.Size = new System.Drawing.Size(96, 17);
-            this.chkShowAverage.TabIndex = 5;
-            this.chkShowAverage.Text = "Show Average";
-            this.chkShowAverage.UseVisualStyleBackColor = true;
-            this.chkShowAverage.CheckedChanged += new System.EventHandler(this.chkShowAverage_CheckedChanged);
-            // 
             // StatterViewStatsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(997, 718);
+            this.ClientSize = new System.Drawing.Size(1003, 720);
+            this.Controls.Add(this.lblResolution);
+            this.Controls.Add(this.sliderEncDpsResolution);
             this.Controls.Add(this.chkShowAverage);
             this.Controls.Add(this.chkShowEncDps);
             this.Controls.Add(this.lblNotes);
@@ -214,6 +240,7 @@
             this.Text = "View Stats";
             this.Load += new System.EventHandler(this.ViewStats_Load);
             this.pnlGraph.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.sliderEncDpsResolution)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgStats)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -234,5 +261,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn OC;
         private System.Windows.Forms.CheckBox chkShowEncDps;
         private System.Windows.Forms.CheckBox chkShowAverage;
+        private System.Windows.Forms.TrackBar sliderEncDpsResolution;
+        private System.Windows.Forms.Label lblResolution;
     }
 }

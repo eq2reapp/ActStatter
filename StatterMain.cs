@@ -68,6 +68,10 @@ namespace ActStatter
         private StatterSettings _settings = new StatterSettings();
         private StatterStatCollection _statCollection = null;
 
+        // Also detect when DarqUI is logging stats so we can show extra help, etc.
+        private bool _usingDarqUI = false;
+        public bool DarqUIDetected {  get { return _usingDarqUI; } }
+
         public StatterMain()
         {
             // Wire up other events
@@ -285,6 +289,8 @@ namespace ActStatter
             // Also check for DarqUI StatMon loglines
             if (_regexDarqStatMonLine.IsMatch(logLine))
             {
+                _usingDarqUI = true;
+
                 marker = ", \"";
                 markerPos = logLine.IndexOf(marker);
                 if (markerPos >= 0)
