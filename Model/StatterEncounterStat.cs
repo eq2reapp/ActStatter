@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace ACT_Plugin.Model
+namespace ActStatter.Model
 {
     public class StatterEncounterStat
     {
@@ -9,5 +9,6 @@ namespace ACT_Plugin.Model
         public StatterStatReading MinReading { get; set; }
         public StatterStatReading MaxReading { get; set; }
         public StatterStatReading AvgReading { get; set; }
+        public StatterStatReading PercentOvercap { get; set; }
     }
 }

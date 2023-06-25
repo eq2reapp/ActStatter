@@ -6,39 +6,64 @@ using System.Text;
 using System.Windows.Forms;
 using System.Xml;
 using Advanced_Combat_Tracker;
-using ACT_Plugin.Model;
-using ACT_Plugin.UI;
+using ActStatter.Model;
+using ActStatter.UI;
 
-namespace ACT_Plugin
+namespace ActStatter
 {
     public class StatterSettings
     {
-        private string _settingsFile = Path.Combine(ActGlobals.oFormActMain.AppDataFolder.FullName, "Config\\Statter.config.xml");
+        private string _settingsFile = null;
 
-        public bool ParseOnImport = true;
-        public bool StepLines = true;
+        public bool ParseOnImport = false;
+        public bool GraphShowAverage = false;
+        public bool GraphShowEncDps = false;
+        public bool GraphShowEncHps = false;
+        public int EncDpsResolution = 0;
+        public int PopupLastX = 0;
+        public int PopupLastY = 0;
+        public int PopupLastW = 0;
+        public int PopupLastH = 0;
+
         public List<StatterStat> Stats = new List<StatterStat>();
 
         public StatterSettings()
         {
+            try
+            {
+                _settingsFile = Path.Combine(ActGlobals.oFormActMain.AppDataFolder.FullName, "Config\\Statter.config.xml");
+            }
+            catch { }
         }
 
         public void Load()
         {
-            if (!File.Exists(_settingsFile)) return;
+            if (_settingsFile == null || !File.Exists(_settingsFile)) return;
 
             XmlDocument doc = new XmlDocument();
             doc.Load(_settingsFile);
             XmlNode rootNode = doc.SelectSingleNode("Settings");
 
-            ParseOnImport = RetrieveSetting<bool>(rootNode, "ParseOnImport");
-            StepLines = RetrieveSetting<bool>(rootNode, "StepLines");
+            ParseOnImport = RetrieveSetting<bool>(rootNode, "ParseOnImport", true);
+            GraphShowAverage = RetrieveSetting<bool>(rootNode, "GraphShowAverage", false);
+            GraphShowEncDps = RetrieveSetting<bool>(rootNode, "GraphShowEncDps", false);
+            GraphShowEncHps = RetrieveSetting<bool>(rootNode, "GraphShowEncHps", false);
+            EncDpsResolution = RetrieveSetting<int>(rootNode, "EncDpsResolution", 5);
+
+            var minSize = StatterViewStatsForm.GetDefaultSize();
+            PopupLastW = RetrieveSetting<int>(rootNode, "PopupLastW", minSize.Width);
+            PopupLastH = RetrieveSetting<int>(rootNode, "PopupLastH", minSize.Height);
+            var curScreen = Screen.FromControl(ActGlobals.oFormActMain);
+            PopupLastX = RetrieveSetting<int>(rootNode, "PopupLastX", (int)Math.Floor((curScreen.WorkingArea.Width - PopupLastW) / 2.0));
+            PopupLastY = RetrieveSetting<int>(rootNode, "PopupLastY", (int)Math.Floor((curScreen.WorkingArea.Height - PopupLastH) / 2.0));
 
             LoadStats(rootNode.SelectSingleNode("Stats"));
         }
 
         public void Save()
         {
+            if (_settingsFile == null || !File.Exists(_settingsFile)) return;
+
             XmlDocument doc = new XmlDocument();
             doc.AppendChild(doc.CreateXmlDeclaration("1.0", null, null));
 
@@ -46,7 +71,14 @@ namespace ACT_Plugin
             doc.AppendChild(rootNode);
 
             AttachChildNode(rootNode, "ParseOnImport", ParseOnImport.ToString());
-            AttachChildNode(rootNode, "StepLines", StepLines.ToString());
+            AttachChildNode(rootNode, "GraphShowAverage", GraphShowAverage.ToString());
+            AttachChildNode(rootNode, "GraphShowEncDps", GraphShowEncDps.ToString());
+            AttachChildNode(rootNode, "GraphShowEncHps", GraphShowEncHps.ToString());
+            AttachChildNode(rootNode, "EncDpsResolution", EncDpsResolution.ToString());
+            AttachChildNode(rootNode, "PopupLastW", PopupLastW.ToString());
+            AttachChildNode(rootNode, "PopupLastH", PopupLastH.ToString());
+            AttachChildNode(rootNode, "PopupLastX", PopupLastX.ToString());
+            AttachChildNode(rootNode, "PopupLastY", PopupLastY.ToString());
 
             XmlElement statsNode = AttachChildNode(rootNode, "Stats", null);
             SaveStats(statsNode);
@@ -59,7 +91,14 @@ namespace ACT_Plugin
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("Settings:");
             sb.AppendLine("  ParseOnImport = " + ParseOnImport);
-            sb.AppendLine("  StepLines = " + StepLines);
+            sb.AppendLine("  GraphShowAverage = " + GraphShowAverage);
+            sb.AppendLine("  GraphShowEncDps = " + GraphShowEncDps);
+            sb.AppendLine("  GraphShowEncHps = " + GraphShowEncHps);
+            sb.AppendLine("  EncDpsResolution = " + EncDpsResolution.ToString());
+            sb.AppendLine("  PopupLastW = " + PopupLastW.ToString());
+            sb.AppendLine("  PopupLastH = " + PopupLastH.ToString());
+            sb.AppendLine("  PopupLastX = " + PopupLastX.ToString());
+            sb.AppendLine("  PopupLastY = " + PopupLastY.ToString());
             List<string> _trackedStats = new List<string>();
             foreach (StatterStat stat in Stats)
             {
@@ -70,9 +109,9 @@ namespace ACT_Plugin
             return sb.ToString();
         }
 
-        private T RetrieveSetting<T>(XmlNode attachPoint, string name)
+        private T RetrieveSetting<T>(XmlNode attachPoint, string name, T defaultVal)
         {
-            T settingVal = default(T);
+            T settingVal = defaultVal;
 
             XmlNode settingNode = attachPoint.SelectSingleNode(name);
             if (settingNode != null)
@@ -124,6 +163,7 @@ namespace ACT_Plugin
             {
                 XmlElement statNode = AttachChildNode(attachPoint, "Stat", null);
                 AttachChildNode(statNode, "Name", stat.Name);
+                AttachChildNode(statNode, "Key", stat.Key);
                 AttachChildNode(statNode, "Colour", ColourToString(stat.Colour));
             }
         }

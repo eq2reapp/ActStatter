@@ -1,27 +1,68 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using ACT_Plugin.Model;
+using Advanced_Combat_Tracker;
+using ActStatter.Model;
+using ActStatter.Util;
 
-namespace ACT_Plugin.UI
+namespace ActStatter.UI
 {
     public partial class StatterStatGraph : UserControl
     {
+        private class LineOptions
+        {
+            public Color Color;
+            public float Width;
+            public int Alpha = 255;
+        }
+        private class GraphPin
+        {
+            public Point Point;
+            public string Label;
+        }
+
+        private StatterSettings _settings = new StatterSettings();
+        private List<GraphPin> _pins = new List<GraphPin>();
+
         // Global margins surrounding the graph area (used for labels)
         private const int MARGIN_DATA_X_LEFT = 55;
         private const int MARGIN_DATA_X_RIGHT = 55;
         private const int MARGIN_DATA_Y_TOP = 30;
         private const int MARGIN_DATA_Y_BOTTOM = 30;
+        private const int MARGIN_DPS_DATA_BUFFER = 20;
+
+        // Line constants
+        private const float LINE_SHADOW_WIDTH = 5.0f;
+        private const float LINE_OC_WIDTH = 8.0f;
+        private const float LINE_NON_OC_WIDTH = 2.0f;
+        private readonly Color LINE_SHADOW_COLOUR = Color.FromArgb(128, 200, 200, 200);
+        private const int LINE_SHADOW_ALPHA = 160;
 
         // Bounds for the graph drawing area
-        private int DataWidth { get { return this.Width - MARGIN_DATA_X_LEFT - MARGIN_DATA_X_RIGHT; } }
-        private int DataHeight { get { return this.Height - MARGIN_DATA_Y_TOP - MARGIN_DATA_Y_BOTTOM; } }
-        private int DataLeft { get { return MARGIN_DATA_X_LEFT; } }
-        private int DataRight { get { return this.Width - MARGIN_DATA_X_RIGHT; } }
-        private int DataTop { get { return MARGIN_DATA_Y_TOP; } }
-        private int DataBottom { get { return this.Height - MARGIN_DATA_Y_BOTTOM; } }
+        private bool ShowingDps { get { return _settings.GraphShowEncDps && _encDps.Count > 0; } }
+        private bool ShowingHps { get { return _settings.GraphShowEncHps && _encHps.Count > 0; } }
+        private double DpsAreaRatio = 0.33;
+        private int GraphWidth { get { return this.Width - MARGIN_DATA_X_LEFT - MARGIN_DATA_X_RIGHT; } }
+        private int GraphHeight { get { return this.Height - MARGIN_DATA_Y_TOP - MARGIN_DATA_Y_BOTTOM; } }
+        private int GraphLeft { get { return MARGIN_DATA_X_LEFT; } }
+        private int GraphRight { get { return this.Width - MARGIN_DATA_X_RIGHT; } }
+        private int GraphTop { get { return MARGIN_DATA_Y_TOP; } }
+        private int GraphBottom { get { return this.Height - MARGIN_DATA_Y_BOTTOM; } }
+        private int DataWidth { get { return GraphWidth; } }
+        private int DataHeight { get { return (ShowingDps || ShowingHps) ? (int)Math.Floor((GraphHeight - MARGIN_DPS_DATA_BUFFER) * (1 - DpsAreaRatio)) : GraphHeight; } }
+        private int DataLeft { get { return GraphLeft; } }
+        private int DataRight { get { return GraphRight; } }
+        private int DataTop { get { return GraphTop; } }
+        private int DataBottom { get { return DataTop + DataHeight; } }
+        private int DpsWidth { get { return GraphWidth; } }
+        private int DpsHeight { get { return (ShowingDps || ShowingHps) ? (int)Math.Floor((GraphHeight - MARGIN_DPS_DATA_BUFFER) * (DpsAreaRatio)) : 0; } }
+        private int DpsLeft { get { return GraphLeft; } }
+        private int DpsRight { get { return GraphRight; } }
+        private int DpsTop { get { return GraphBottom - DpsHeight; } }
+        private int DpsBottom { get { return GraphBottom; } }
 
         // Calculated values used for rendering data points and lines
         private List<StatterEncounterStat> _stats = new List<StatterEncounterStat>();
@@ -32,6 +73,12 @@ namespace ACT_Plugin.UI
         private double _maxVal = double.MinValue;
         private double _valueSpread = -1;
         private double _valueAverage = -1;
+
+        // Data for rendering enc dps/hps overlays
+        private Dictionary<int, double> _encDps = new Dictionary<int, double>();
+        private double _maxDps = double.MinValue;
+        private Dictionary<int, double> _encHps = new Dictionary<int, double>();
+        private double _maxHps = double.MinValue;
 
         // The off-screen drawing buffer where renders are prepared
         private Bitmap _buff = null;
@@ -51,9 +98,6 @@ namespace ACT_Plugin.UI
         private SolidBrush _bLabels = null;
         private Pen _pAvg = null;
         private SolidBrush _bAvgFill = null;
-
-        // If true, the stat line graphs will be rendered as steps rather than direct path
-        public bool ShowSteppedStatLines { get; set; }
 
         public StatterStatGraph()
         {
@@ -84,19 +128,24 @@ namespace ACT_Plugin.UI
         {
             if (_buff != null) _buff.Dispose();
 
-            _sfNearNear.Dispose();
-            _sfFarNear.Dispose();
-            _sfNearMid.Dispose();
-            _sfFarMid.Dispose();
-            _sfMidFar.Dispose();
-            _sfMidNear.Dispose();
+            if (_sfNearNear != null) _sfNearNear.Dispose();
+            if (_sfFarNear != null) _sfFarNear.Dispose();
+            if (_sfNearMid != null) _sfNearMid.Dispose();
+            if (_sfFarMid != null) _sfFarMid.Dispose();
+            if (_sfMidFar != null) _sfMidFar.Dispose();
+            if (_sfMidNear != null) _sfMidNear.Dispose();
 
-            _pCrosshair.Dispose();
-            _pTicks.Dispose();
-            _pOutline.Dispose();
-            _bLabels.Dispose();
-            _pAvg.Dispose();
-            _bAvgFill.Dispose();
+            if (_pCrosshair != null) _pCrosshair.Dispose();
+            if (_pTicks != null) _pTicks.Dispose();
+            if (_pOutline != null) _pOutline.Dispose();
+            if (_bLabels != null) _bLabels.Dispose();
+            if (_pAvg != null) _pAvg.Dispose();
+            if (_bAvgFill != null) _bAvgFill.Dispose();
+        }
+
+        public void UseSettings(StatterSettings settings)
+        {
+            _settings = settings;
         }
 
         private void StatGraph_Load(object sender, System.EventArgs e)
@@ -107,6 +156,7 @@ namespace ACT_Plugin.UI
 
         private void picMain_SizeChanged(object sender, System.EventArgs e)
         {
+            _pins.Clear();
             UpdateGraph();
         }
 
@@ -115,8 +165,8 @@ namespace ACT_Plugin.UI
         {
             if (this.Width < 1 || this.Height < 1) return;
 
-            int x = Math.Min(DataRight + 1, Math.Max(DataLeft - 1, e.X));
-            int y = Math.Min(DataBottom + 1, Math.Max(DataTop - 1, e.Y));
+            int x = Math.Min(GraphRight + 1, Math.Max(GraphLeft - 1, e.X));
+            int y = Math.Min(GraphBottom + 1, Math.Max(GraphTop - 1, e.Y));
             Point boundedLocation = new Point(x, y);
 
             using (Bitmap bmpBuff = new Bitmap(_buff))
@@ -127,19 +177,81 @@ namespace ACT_Plugin.UI
 
                 gBuff.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
 
-                if (x >= DataLeft && x <= DataRight)
+                // Draw time line
+                if (x >= GraphLeft && x <= GraphRight)
                 {
-                    gBuff.DrawLine(_pCrosshair, x, DataTop, x, DataBottom);
+                    gBuff.DrawLine(_pCrosshair, x, GraphTop, x, GraphBottom);
                     DateTime timeAtPos = GetTimeAt(boundedLocation);
-                    gBuff.DrawString(string.Format("{0} (+{1})", timeAtPos.ToString("h':'mm':'ss"), GetOffsetString(timeAtPos)), this.Font, SystemBrushes.Highlight, x, DataTop - 5, _sfMidFar);
+
+                    gBuff.DrawString(string.Format("{0} ({1})", 
+                            timeAtPos.ToString("h':'mm':'ss"), 
+                            GetOffsetString(timeAtPos)),
+                        this.Font, SystemBrushes.Highlight, x, DataTop - 5, _sfMidFar);
                 }
+
+                // Draw stat line
                 if (y >= DataTop && y <= DataBottom)
                 {
                     gBuff.DrawLine(_pCrosshair, DataLeft, y, DataRight, y);
-                    gBuff.DrawString(GetValueAt(boundedLocation).ToString("0"), this.Font, SystemBrushes.Highlight, DataRight + 5, y, _sfNearMid);
+                    string readableVal = Formatters.GetReadableNumber(GetValueAt(boundedLocation));
+                    gBuff.DrawString(readableVal, this.Font, SystemBrushes.Highlight, DataRight + 5, y, _sfNearMid);
+                }
+
+                // Draw dps/hps line
+                if (y >= DpsTop && y <= DpsBottom)
+                {
+                    gBuff.DrawLine(_pCrosshair, DpsLeft, y, DpsRight, y);
+
+                    double maxVal = 0;
+                    if (ShowingDps)
+                        maxVal = _maxDps;
+                    else if (ShowingHps)
+                        maxVal = _maxHps;
+                    string readableVal = Formatters.GetReadableNumber(GetEncValAt(boundedLocation, maxVal));
+                    gBuff.DrawString(readableVal, this.Font, SystemBrushes.Highlight, DpsRight + 5, y, _sfNearMid);
                 }
 
                 gBase.DrawImage(bmpBuff, 0, 0);
+            }
+        }
+
+        private void picMain_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (this.Width < 1 || this.Height < 1) return;
+
+            int x = Math.Min(GraphRight + 1, Math.Max(GraphLeft - 1, e.X));
+            int y = Math.Min(GraphBottom + 1, Math.Max(GraphTop - 1, e.Y));
+            Point boundedLocation = new Point(x, y);
+
+            if (e.Button == MouseButtons.Left && y >= DataTop && y <= DataBottom)
+            {
+                string readableVal = Formatters.GetReadableNumber(GetValueAt(boundedLocation));
+                _pins.Add(new GraphPin()
+                {
+                    Point = boundedLocation,
+                    Label = readableVal
+                });
+                UpdateGraph();
+            }
+            else if (e.Button == MouseButtons.Left && y >= DpsTop && y <= DpsBottom)
+            {
+                double maxVal = 0;
+                if (ShowingDps)
+                    maxVal = _maxDps;
+                else if (ShowingHps)
+                    maxVal = _maxHps;
+                string readableVal = Formatters.GetReadableNumber(GetEncValAt(boundedLocation, maxVal));
+                _pins.Add(new GraphPin()
+                {
+                    Point = boundedLocation,
+                    Label = readableVal
+                });
+                UpdateGraph();
+            }
+            else
+            {
+                _pins.Clear();
+                UpdateGraph();
             }
         }
 
@@ -169,27 +281,55 @@ namespace ACT_Plugin.UI
                 g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
                 g.Clear(SystemColors.Window);
 
-                // Draw the grid and labels
+                // Draw the grids
                 int spacing = 20;
                 for (int x = DataLeft + spacing; x < DataRight; x += spacing)
                     g.DrawLine(_pTicks, x, DataTop, x, DataBottom);
                 for (int y = DataTop + spacing; y < DataBottom; y += spacing)
                     g.DrawLine(_pTicks, DataLeft, y, DataRight, y);
-
                 g.DrawLine(_pOutline, DataLeft - 4, DataTop, DataRight, DataTop);
                 g.DrawLine(_pOutline, DataLeft - 4, DataBottom, DataRight, DataBottom);
                 g.DrawLine(_pOutline, DataLeft, DataTop, DataLeft, DataBottom + 4);
                 g.DrawLine(_pOutline, DataRight, DataTop, DataRight, DataBottom + 4);
+                g.DrawString(Formatters.GetReadableNumber(_maxVal), this.Font, _bLabels, DataLeft - 8, DataTop + 3, _sfFarMid);
+                g.DrawString(Formatters.GetReadableNumber(_minVal), this.Font, _bLabels, DataLeft - 8, DataBottom - 3, _sfFarMid);
 
-                g.DrawString(_startTime.ToString("h':'mm':'ss"), this.Font, _bLabels, DataLeft - 20, DataBottom + 8, _sfNearNear);
-                g.DrawString(_endTime.ToString("h':'mm':'ss"), this.Font, _bLabels, DataRight + 20, DataBottom + 8, _sfFarNear);
+                if (ShowingDps || ShowingHps)
+                {
+                    for (int x = DpsLeft + spacing; x < DpsRight; x += spacing)
+                        g.DrawLine(_pTicks, x, DpsTop, x, DpsBottom);
+                    for (int y = DpsTop + spacing; y < DpsBottom; y += spacing)
+                        g.DrawLine(_pTicks, DpsLeft, y, DpsRight, y);
+                    g.DrawLine(_pOutline, DpsLeft - 4, DpsTop, DpsRight, DpsTop);
+                    g.DrawLine(_pOutline, DpsLeft - 4, DpsBottom, DpsRight, DpsBottom);
+                    g.DrawLine(_pOutline, DpsLeft, DpsTop, DpsLeft, DpsBottom + 4);
+                    g.DrawLine(_pOutline, DpsRight, DpsTop, DpsRight, DpsBottom + 4);
 
-                g.DrawString(_maxVal.ToString("0"), this.Font, _bLabels, DataLeft - 8, DataTop + 3, _sfFarMid);
-                g.DrawString(_minVal.ToString("0"), this.Font, _bLabels, DataLeft - 8, DataBottom - 3, _sfFarMid);
+                    string label = "Label";
+                    double maxVal = 0;
+                    if (ShowingDps)
+                    {
+                        label = "EncDPS";
+                        maxVal = _maxDps;
+                    }
+                    else if (ShowingHps)
+                    {
+                        label = "EncHPS";
+                        maxVal = _maxHps;
+                    }
+                    g.DrawString(Formatters.GetReadableNumber(maxVal), this.Font, _bLabels, DpsLeft - 8, DpsTop + 3, _sfFarMid);
+                    g.DrawString(Formatters.GetReadableNumber(0), this.Font, _bLabels, DpsLeft - 8, DpsBottom - 3, _sfFarMid);
+                    g.DrawString(label, this.Font, _bLabels, DpsLeft - 8, DpsTop + (DpsHeight / 2), _sfFarMid);
+                }
+
+                // Draw the time labels
+                g.DrawString(_startTime.ToString("h':'mm':'ss"), this.Font, _bLabels, GraphLeft - 20, GraphBottom + 8, _sfNearNear);
+                g.DrawString(_endTime.ToString("h':'mm':'ss"), this.Font, _bLabels, GraphRight + 20, GraphBottom + 8, _sfFarNear);
+                g.DrawString($"Period: {_settings.EncDpsResolution}s", this.Font, _bLabels, GraphLeft + ((GraphRight - GraphLeft) / 2), GraphBottom + 8, _sfMidNear);
 
                 // Draw a box representing the average of the stat (note that this only applies
                 // when a single stat is being shown)
-                if (_valueAverage >= 0)
+                if (_settings.GraphShowAverage && _valueAverage >= 0)
                 {
                     Point pTopLeft = GetDataPoint(_startTime, _valueAverage);
                     Point pTopRight = GetDataPoint(_endTime, _valueAverage);
@@ -197,53 +337,166 @@ namespace ACT_Plugin.UI
                     g.DrawLine(_pAvg, pTopLeft, pTopRight);
                 }
 
+                // Draw the encDps/encHps line
+                if (ShowingDps || ShowingHps)
+                {
+                    Dictionary<int, double> statPoints = new Dictionary<int, double>();
+                    double maxVal = 0;
+                    Color lineColour = Color.Black;
+                    if (ShowingDps)
+                    {
+                        statPoints = _encDps;
+                        maxVal = _maxDps;
+                        lineColour = Color.DarkRed;
+                    }
+                    else if (ShowingHps)
+                    {
+                        statPoints = _encHps;
+                        maxVal = _maxHps;
+                        lineColour = Color.DarkGreen;
+                    }
+                    List<Tuple<Point, Point>> encLine = new List<Tuple<Point, Point>>();
+                    Point prevPoint = statPoints.Count > 0 ? GetEncValPoint(0, statPoints[0], maxVal) : GetEncValPoint(0, 0, maxVal);
+                    Point curPoint;
+                    foreach (int tTime in statPoints.Keys)
+                    {
+                        curPoint = GetEncValPoint(tTime, statPoints[tTime], maxVal);
+                        encLine.Add(new Tuple<Point, Point>(prevPoint, curPoint));
+                        prevPoint = curPoint;
+                    }
+                    // Add the last point
+                    curPoint = GetEncValPoint((int)Math.Floor(_totalSeconds), statPoints.Values.Last(), maxVal);
+                    encLine.Add(new Tuple<Point, Point>(prevPoint, curPoint));
+                    RenderLine(g, encLine, lineColour, 2f, 160);
+                }
+
                 // Now render the actual stat value lines
-                Dictionary<Point[], Color> shadowLines = new Dictionary<Point[], Color>();
-                Dictionary<Point[], Color> measurementLines = new Dictionary<Point[], Color>();
+                Dictionary<List<Tuple<Point, Point>>, LineOptions> shadowLines = new Dictionary<List<Tuple<Point, Point>>, LineOptions>();
+                Dictionary<List<Tuple<Point, Point>>, LineOptions> measurementLines = new Dictionary<List<Tuple<Point, Point>>, LineOptions>();
+                LineOptions shadowLineOpts = new LineOptions() { Color = LINE_SHADOW_COLOUR, Width = LINE_SHADOW_WIDTH, Alpha = LINE_SHADOW_ALPHA };
                 for (int i = 0; i < _stats.Count; i++)
                     if (_stats[i].Readings.Count > 0)
                     {
                         StatterEncounterStat encStat = _stats[i];
-                        List<Point> points = new List<Point>();
+                        var readings = encStat.Readings;
+                        StatterStatReading curReading;
+                        StatterStatReading prevReading;
+                        Point prevPoint;
+                        Point wayPoint;
+                        Point curPoint;
+                        List<Tuple<Point, Point>> verticalLines = new List<Tuple<Point, Point>>();
+                        List<Tuple<Point, Point>> nonOcLines = new List<Tuple<Point, Point>>();
+                        List<Tuple<Point, Point>> ocLines = new List<Tuple<Point, Point>>();
 
-                        points.Add(GetDataPoint(_startTime, encStat.Readings[0].Value));
-                        for (int j = 0; j < encStat.Readings.Count; j++)
+                        // Iterate through the readings for this stat, and build collections
+                        // of points that we can use to draw lines for the stat graph. We'll
+                        // build each point and use the previous point to add the line points.
+                        prevReading = readings[0];
+                        for (int j = 0; j < readings.Count; j++)
                         {
-                            // Insert an extra point if steps are being used
-                            if (ShowSteppedStatLines && j > 0 && encStat.Readings[j].Value != encStat.Readings[j - 1].Value)
-                                points.Add(GetDataPoint(encStat.Readings[j].Time, encStat.Readings[j - 1].Value));
+                            // Since this stat can start after the fight T0, handle the first point specially
+                            if (j == 0)
+                                prevPoint = GetDataPoint(_startTime, prevReading.Value);
+                            else
+                                prevPoint = GetDataPoint(prevReading.Time, prevReading.Value);
 
-                            points.Add(GetDataPoint(encStat.Readings[j].Time, encStat.Readings[j].Value));
+                            // Need a horizontal line from the last reading to the current time
+                            curReading = readings[j];
+                            wayPoint = GetDataPoint(curReading.Time, prevReading.Value);
+                            if (prevReading.Overcap)
+                                ocLines.Add(new Tuple<Point, Point>(prevPoint, wayPoint));
+                            else
+                                nonOcLines.Add(new Tuple<Point, Point>(prevPoint, wayPoint));
+
+                            // Now the vertical line
+                            curPoint = GetDataPoint(curReading.Time, curReading.Value);
+                            verticalLines.Add(new Tuple<Point, Point>(wayPoint, curPoint));
+
+                            prevReading = curReading;
                         }
-                        points.Add(GetDataPoint(_endTime, encStat.Readings[encStat.Readings.Count - 1].Value));
+                        // Add a final horizontal line to close out the duration, since it's unlikely the
+                        // reading occured at exactly the end of the encounter
+                        prevPoint = GetDataPoint(prevReading.Time, prevReading.Value);
+                        curPoint = GetDataPoint(_endTime, prevReading.Value);
+                        if (prevReading.Overcap)
+                            ocLines.Add(new Tuple<Point, Point>(prevPoint, curPoint));
+                        else
+                            nonOcLines.Add(new Tuple<Point, Point>(prevPoint, curPoint));
 
-                        shadowLines.Add(ToPointArray(points, 2, 2), Color.FromArgb(128, 200, 200, 200));
-                        measurementLines.Add(ToPointArray(points, 0, 0), encStat.Stat.Colour);
+                        shadowLines.Add(ShiftLines(ocLines, 2, 2), shadowLineOpts);
+                        shadowLines.Add(ShiftLines(nonOcLines, 2, 2), shadowLineOpts);
+                        shadowLines.Add(ShiftLines(verticalLines, 2, 2), shadowLineOpts);
+                        measurementLines.Add(StretchLines(ocLines, 1, 0), new LineOptions() { Color = encStat.Stat.Colour, Width = LINE_OC_WIDTH });
+                        measurementLines.Add(ShiftLines(nonOcLines, 0, 0), new LineOptions() { Color = encStat.Stat.Colour, Width = LINE_NON_OC_WIDTH });
+                        measurementLines.Add(ShiftLines(verticalLines, 0, 0), new LineOptions() { Color = encStat.Stat.Colour, Width = LINE_NON_OC_WIDTH });
+
+                        // Draw the stat label on the axis
+                        string statLabel = encStat.Stat.Name.Replace(" ", Environment.NewLine);
+                        g.DrawString(statLabel, this.Font, _bLabels, DataLeft - 8, DataTop + (DataHeight / 2), _sfFarMid);
                     }
 
-                RenderLines(g, shadowLines, 5.0f);
-                RenderLines(g, measurementLines, 3.0f);
+                RenderLines(g, measurementLines);
+
+                // Render pins
+                foreach (var pin in _pins)
+                {
+                    g.DrawLine(_pCrosshair, DataLeft, pin.Point.Y, DataRight, pin.Point.Y);
+                    g.DrawString(pin.Label, this.Font, SystemBrushes.Highlight, DataRight + 5, pin.Point.Y, _sfNearMid);
+                }
             }
 
             SwapBuff(buff);
         }
 
-        private Point[] ToPointArray(List<Point> points, int xOffset, int yOffset)
+        // Extract all points to an array, optionally shifting them by xOffset or yOffset
+        private List<Tuple<Point, Point>> ShiftLines(List<Tuple<Point, Point>> lines, int xOffset, int yOffset)
         {
-            Point[] pointArray = points.ToArray();
+            List<Tuple<Point, Point>> newLines = new List<Tuple<Point, Point>>();
 
-            if (xOffset != 0)
-                for (int i = 0; i < pointArray.Length - 1; i++)
-                    pointArray[i].X += xOffset;
+            foreach (var line in lines)
+            {
+                newLines.Add(new Tuple<Point, Point>(
+                    new Point(line.Item1.X + xOffset, line.Item1.Y + yOffset),
+                    new Point(line.Item2.X + xOffset, line.Item2.Y + yOffset)
+                ));
+            }
 
-            if (yOffset != 0)
-                for (int i = 0; i < pointArray.Length - 1; i++)
-                    pointArray[i].Y += yOffset;
-
-            return pointArray;
+            return newLines;
         }
 
-        private void RenderLine(Graphics g, Point[] points, Color baseColour, float lineWidth)
+        private List<Tuple<Point, Point>> StretchLines(List<Tuple<Point, Point>> lines, int xStretch, int yStretch)
+        {
+            List<Tuple<Point, Point>> newLines = new List<Tuple<Point, Point>>();
+
+            foreach (var line in lines)
+            {
+                newLines.Add(new Tuple<Point, Point>(
+                    new Point(line.Item1.X - xStretch, line.Item1.Y - yStretch),
+                    new Point(line.Item2.X + xStretch, line.Item2.Y + yStretch)
+                ));
+            }
+
+            return newLines;
+        }
+
+        private void RenderLines(Graphics g, Dictionary<List<Tuple<Point, Point>>, LineOptions> lines)
+        {
+            foreach (var lineList in lines.Keys)
+                RenderLine(g, lineList, lines[lineList].Color, lines[lineList].Width, lines[lineList].Alpha);
+        }
+
+        private void RenderLine(Graphics g, List<Tuple<Point, Point>> lines, Color baseColour, float lineWidth, int alpha)
+        {
+            using (Pen pLine = new Pen(ShiftAlpha(baseColour, alpha), lineWidth))
+            {
+                foreach (var line in lines)
+                {
+                    g.DrawLine(pLine, line.Item1, line.Item2);
+                }
+            }
+        }
+
+        private void RenderPoints(Graphics g, Point[] points, Color baseColour, bool overcap)
         {
             using (SolidBrush bPoint = new SolidBrush(baseColour))
             {
@@ -251,21 +504,21 @@ namespace ACT_Plugin.UI
                 foreach (Point p in points)
                     g.FillEllipse(bPoint, p.X - pntSize, p.Y - pntSize, pntSize * 2, pntSize * 2);
             }
-            using (Pen pLine = new Pen(ShiftAlpha(baseColour, 160), lineWidth))
-            {
-                g.DrawLines(pLine, points);
-            }
         }
 
-        private void RenderLines(Graphics g, Dictionary<Point[], Color> lines, float lineWidth)
+        // Get a point inside the stat drawing area that corresponds to the given time and dps/hps value
+        private Point GetEncValPoint(int timeOffsetSeconds, double encVal, double maxEncVal)
         {
-            foreach (Point[] key in lines.Keys)
-                RenderLine(g, key, lines[key], lineWidth);
-        }
+            int x = 0, y = 0;
 
-        private void RenderLines(Graphics g, Dictionary<Point[], Color> lines)
-        {
-            RenderLines(g, lines, 2.0f);
+            if (_totalSeconds <= 0)
+                x = DpsLeft + (DpsWidth / 2);
+            else
+                x = DpsLeft + (int)((timeOffsetSeconds / _totalSeconds) * DpsWidth);
+
+            y = maxEncVal <= 0 ? 0 : DpsBottom - (int)((encVal / maxEncVal) * DpsHeight);
+
+            return new Point(x, y);
         }
 
         // Get a point inside the stat drawing area that corresponds to the given time and value
@@ -288,7 +541,7 @@ namespace ACT_Plugin.UI
 
         private DateTime GetTimeAt(Point p)
         {
-            DateTime timeAtPoint = _startTime.AddSeconds(Math.Max(0, (((p.X - DataLeft) / (1.0 * DataWidth)) * _totalSeconds)));
+            DateTime timeAtPoint = _startTime.AddSeconds(Math.Max(0, (((p.X - GraphLeft) / (1.0 * GraphWidth)) * _totalSeconds)));
             return timeAtPoint;
         }
 
@@ -297,13 +550,31 @@ namespace ACT_Plugin.UI
             return _maxVal - ((((p.Y - DataTop) / (1.0 * DataHeight)) * _valueSpread));
         }
 
+        private double GetEncValAt(Point p, double maxVal)
+        {
+            return maxVal - ((((p.Y - DpsTop) / (1.0 * DpsHeight)) * maxVal));
+        }
+
         private string GetOffsetString(DateTime time)
         {
             TimeSpan tsOffset = time - _startTime;
             StringBuilder sb = new StringBuilder();
-            if (tsOffset.Hours > 0) sb.Append(tsOffset.Hours).Append(":");
-            if (tsOffset.Minutes > 0) sb.Append(sb.Length > 0 ? tsOffset.Minutes.ToString().PadLeft(2, '0') : tsOffset.Minutes.ToString()).Append(":");
-            sb.Append(sb.Length > 0 ? tsOffset.Seconds.ToString().PadLeft(2, '0') : tsOffset.Seconds.ToString());
+
+            // Append duration in format h:mm:ss
+            if (tsOffset.TotalSeconds > 60)
+            {
+                sb.Append("+");
+                if (tsOffset.Hours > 0)
+                    sb.Append(tsOffset.Hours).Append(":");
+                if (tsOffset.Minutes > 0)
+                    sb.Append(sb.Length > 0 ? tsOffset.Minutes.ToString().PadLeft(2, '0') : tsOffset.Minutes.ToString()).Append(":");
+                sb.Append(sb.Length > 0 ? tsOffset.Seconds.ToString().PadLeft(2, '0') : tsOffset.Seconds.ToString());
+                sb.Append(" / ");
+            }
+
+            // Also append duration in total elapsed seconds
+            sb.Append("+" + Math.Floor(tsOffset.TotalSeconds).ToString("0"));
+
             return sb.ToString();
         }
 
@@ -313,8 +584,10 @@ namespace ACT_Plugin.UI
         }
 
         // This is the main draw routine. Calculate some state values, then render and display the buffer
-        public void DrawStats(List<StatterEncounterStat> stats, DateTime startTime, DateTime endTime)
+        public void DrawStats(List<StatterEncounterStat> stats, DateTime startTime, DateTime endTime, EncounterData encData)
         {
+            _pins.Clear();
+
             _stats = stats;
             _startTime = startTime;
             _endTime = endTime;
@@ -335,12 +608,67 @@ namespace ACT_Plugin.UI
             _valueSpread = _minVal == double.MaxValue ? 0 : _maxVal - _minVal;
 
             // Now calculate the average value if that concept applies
-            if (stats.Count == 1 && stats[0].Readings.Count > 1 && _totalSeconds > 0)
+            if (_stats.Count == 1 && _stats[0].Readings.Count > 1 && _totalSeconds > 0)
             {
-                _valueAverage = stats[0].AvgReading.Value;
+                _valueAverage = _stats[0].AvgReading.Value;
             }
             else
                 _valueAverage = -1;
+
+            // Calculate enc dps/hps
+            _encDps.Clear();
+            _maxDps = 0;
+            _encHps.Clear();
+            _maxHps = 0;
+            if (_settings.GraphShowEncDps || _settings.GraphShowEncHps)
+            {
+                // To generate the dps/hps graph, just sum up the damage done each second
+                // over the duration of the enncounter. Then pass back over and accumulate
+                // damage done in the last n seconds, where n is defined by the resolution
+                // slider. ACT uses 10 sec in its own graphs (which is the max duration we use,
+                // corresponding to the "lowest" resolution).
+                int accumulateSeconds = _settings.EncDpsResolution;
+                List<MasterSwing> swings = null;
+                foreach (var combatant in encData.Items)
+                    if (combatant.Key.Equals(encData.CharName.ToUpper()))
+                        foreach (var combatItem in combatant.Value.Items)
+                        {
+                            if (_settings.GraphShowEncDps && combatItem.Key.Equals("Outgoing Damage") ||
+                                _settings.GraphShowEncHps && combatItem.Key.Equals("Healed (Out)"))
+                                foreach (var subItem in combatItem.Value.Items)
+                                    if (subItem.Key.Equals("All"))
+                                        swings = subItem.Value.Items;
+                        }
+                if (swings != null)
+                {
+                    int encDurationSec = Convert.ToInt32(_totalSeconds);
+                    double[] valueAtSecond = new double[encDurationSec];
+                    foreach (var swing in swings)
+                    {
+                        int t = Math.Min(encDurationSec - 1, Convert.ToInt32((swing.Time - _startTime).TotalSeconds));
+                        valueAtSecond[t] += swing.Damage.Number;
+                    }
+                    for (int i = 0; i < encDurationSec; i++)
+                    {
+                        double sumInRollingPeriod = 0;
+                        for (int j = i; j > (i - accumulateSeconds) && j >= 0; j--)
+                            sumInRollingPeriod += valueAtSecond[j];
+                        double valPerSec = sumInRollingPeriod / (accumulateSeconds * 1.0);
+                        if (_settings.GraphShowEncDps)
+                        {
+                            if (valPerSec > _maxDps)
+                                _maxDps = valPerSec;
+                            _encDps.Add(i, valPerSec);
+                        }
+                        else if (_settings.GraphShowEncHps)
+                        {
+                            if (valPerSec > _maxHps)
+                                _maxHps = valPerSec;
+                            _encHps.Add(i, valPerSec);
+                        }
+                    }
+                }
+            }
 
             UpdateGraph();
         }

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Windows.Forms;
-using ACT_Plugin.Model;
+using ActStatter.Model;
 
-namespace ACT_Plugin.UI
+namespace ActStatter.UI
 {
     public partial class StatterStatDetailsPanel : UserControl
     {

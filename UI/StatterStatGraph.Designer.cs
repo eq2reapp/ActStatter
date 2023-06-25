@@ -1,4 +1,4 @@
-﻿namespace ACT_Plugin.UI
+﻿namespace ActStatter.UI
 {
     partial class StatterStatGraph
     {
@@ -45,13 +45,14 @@
             this.picMain.SizeChanged += new System.EventHandler(this.picMain_SizeChanged);
             this.picMain.Paint += new System.Windows.Forms.PaintEventHandler(this.picMain_Paint);
             this.picMain.MouseMove += new System.Windows.Forms.MouseEventHandler(this.picMain_MouseMove);
+            this.picMain.MouseUp += new System.Windows.Forms.MouseEventHandler(this.picMain_MouseUp);
             // 
-            // StatGraph
+            // StatterStatGraph
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.picMain);
-            this.Name = "StatGraph";
+            this.Name = "StatterStatGraph";
             this.Size = new System.Drawing.Size(555, 386);
             this.Load += new System.EventHandler(this.StatGraph_Load);
             ((System.ComponentModel.ISupportInitialize)(this.picMain)).EndInit();

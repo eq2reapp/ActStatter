@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
-using ACT_Plugin.Model;
+using ActStatter.Model;
 
-namespace ACT_Plugin.UI
+namespace ActStatter.UI
 {
     public partial class StatterPluginTab : UserControl
     {
@@ -54,13 +54,8 @@ namespace ACT_Plugin.UI
 
         private void StatterUI_Load(object sender, EventArgs e)
         {
-            ShowInstructions();
-
             chkParseOnImport.Checked = _settings.ParseOnImport;
-            chkSteppedLines.Checked = _settings.StepLines;
             SetSelectedStats();
-
-            btnTestGraph.Visible = StatterMain.DEBUG;
 
             _loading = false;
         }
@@ -81,7 +76,6 @@ namespace ACT_Plugin.UI
                 }
 
                 AddSelectedStat(newStat);
-
 
                 OnSelectedStatsChanged();
             }
@@ -108,20 +102,6 @@ namespace ACT_Plugin.UI
             }
 
             OnSelectedStatsChanged();
-        }
-
-        protected void ShowInstructions()
-        {
-            txtInstructions.Rtf = string.Format(
-@"{{\rtf1\ansi\f0\pard
-Create a macro that calls {{\i /do_file_commands {0}}} and bind this to a hotkey you naturally use often during combat.\par
-\par
-To view your stats, right-click an encounter listed in the encounter tree (note that this can also include the zone-wide {{\i ""All""}} encounter) and select {{\i View Encounter Stats}}. Doing so will open a window showing the minimum and maximum recorded values for each stat during the selected encounter. Clicking on one or more stat rows will display a graph of each selected stat over the course of the encounter. Hovering over the graph will show instantaneous values and times.\par
-\par
-Using this macro will spam up your chat window (using the chat category ""Command""), so you may want to redirect the output to a chat window that does not contain any other useful info.\par
-\par
-Finally, note that /do_file_commands currently limits the number of stats that can be tracked to {1}.\par
-}}", StatterMain.MACRO_FILENAME, MAX_SELECTABLE_STATS);
         }
 
         public void SetSelectedStats()
@@ -155,40 +135,9 @@ Finally, note that /do_file_commands currently limits the number of stats that c
             return usedStatNames;
         }
 
-        private void btnTestGraph_Click(object sender, EventArgs e)
-        {
-            List<StatterStat> stats = new List<StatterStat>();
-            stats.Add(new StatterStat("Fervor"));
-            stats.Add(new StatterStat("Potency"));
-
-            stats[0].Colour = Color.Red;
-            stats[1].Colour = Color.Green;
-
-            int durationSeconds = 10;
-            DateTime end = DateTime.Now;
-            DateTime start = end.AddSeconds(-durationSeconds);
-            for (int i = 0; i < durationSeconds; i++)
-            {
-                stats[0].ParseReading((i * 1).ToString(), start.AddSeconds(i));
-                stats[1].ParseReading((i * 2).ToString(), start.AddSeconds(i));
-            }
-
-            var dlgViewStats = new StatterViewStatsForm(_statter, _settings);
-            dlgViewStats.ShowStats(stats, start, end, "Test");
-        }
-
         private void chkParseOnImport_CheckedChanged(object sender, EventArgs e)
         {
             _settings.ParseOnImport = chkParseOnImport.Checked;
-            if (!_loading)
-            {
-                _settings.Save();
-            }
-        }
-
-        private void chkSteppedLines_CheckedChanged(object sender, EventArgs e)
-        {
-            _settings.StepLines = chkSteppedLines.Checked;
             if (!_loading)
             {
                 _settings.Save();
@@ -214,6 +163,17 @@ Finally, note that /do_file_commands currently limits the number of stats that c
         private void btnRefresh_Click(object sender, EventArgs e)
         {
             txtLogs.Lines = _statter.GetLogs();
+        }
+
+        private void btnClearLogs_Click(object sender, EventArgs e)
+        {
+            _statter.ClearLogs();
+            txtLogs.Lines = null;
+        }
+
+        private void lnkOpenHelp_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            Process.Start(StatterMain.HELP_PAGE);
         }
     }
 }
