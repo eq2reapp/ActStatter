@@ -15,10 +15,16 @@ namespace ActStatter
     {
         private string _settingsFile = null;
 
-        public bool ParseOnImport = true;
-        public bool GraphShowAverage = true;
-        public bool GraphShowEncDps = true;
-        public int EncDpsResolution = 1;
+        public bool ParseOnImport = false;
+        public bool GraphShowAverage = false;
+        public bool GraphShowEncDps = false;
+        public bool GraphShowEncHps = false;
+        public int EncDpsResolution = 0;
+        public int PopupLastX = 0;
+        public int PopupLastY = 0;
+        public int PopupLastW = 0;
+        public int PopupLastH = 0;
+
         public List<StatterStat> Stats = new List<StatterStat>();
 
         public StatterSettings()
@@ -38,10 +44,18 @@ namespace ActStatter
             doc.Load(_settingsFile);
             XmlNode rootNode = doc.SelectSingleNode("Settings");
 
-            ParseOnImport = RetrieveSetting<bool>(rootNode, "ParseOnImport");
-            GraphShowAverage = RetrieveSetting<bool>(rootNode, "GraphShowAverage");
-            GraphShowEncDps = RetrieveSetting<bool>(rootNode, "GraphShowEncDps");
-            EncDpsResolution = Math.Max(1, RetrieveSetting<int>(rootNode, "EncDpsResolution"));
+            ParseOnImport = RetrieveSetting<bool>(rootNode, "ParseOnImport", true);
+            GraphShowAverage = RetrieveSetting<bool>(rootNode, "GraphShowAverage", false);
+            GraphShowEncDps = RetrieveSetting<bool>(rootNode, "GraphShowEncDps", false);
+            GraphShowEncHps = RetrieveSetting<bool>(rootNode, "GraphShowEncHps", false);
+            EncDpsResolution = RetrieveSetting<int>(rootNode, "EncDpsResolution", 5);
+
+            var minSize = StatterViewStatsForm.GetDefaultSize();
+            PopupLastW = RetrieveSetting<int>(rootNode, "PopupLastW", minSize.Width);
+            PopupLastH = RetrieveSetting<int>(rootNode, "PopupLastH", minSize.Height);
+            var curScreen = Screen.FromControl(ActGlobals.oFormActMain);
+            PopupLastX = RetrieveSetting<int>(rootNode, "PopupLastX", (int)Math.Floor((curScreen.WorkingArea.Width - PopupLastW) / 2.0));
+            PopupLastY = RetrieveSetting<int>(rootNode, "PopupLastY", (int)Math.Floor((curScreen.WorkingArea.Height - PopupLastH) / 2.0));
 
             LoadStats(rootNode.SelectSingleNode("Stats"));
         }
@@ -59,7 +73,12 @@ namespace ActStatter
             AttachChildNode(rootNode, "ParseOnImport", ParseOnImport.ToString());
             AttachChildNode(rootNode, "GraphShowAverage", GraphShowAverage.ToString());
             AttachChildNode(rootNode, "GraphShowEncDps", GraphShowEncDps.ToString());
+            AttachChildNode(rootNode, "GraphShowEncHps", GraphShowEncHps.ToString());
             AttachChildNode(rootNode, "EncDpsResolution", EncDpsResolution.ToString());
+            AttachChildNode(rootNode, "PopupLastW", PopupLastW.ToString());
+            AttachChildNode(rootNode, "PopupLastH", PopupLastH.ToString());
+            AttachChildNode(rootNode, "PopupLastX", PopupLastX.ToString());
+            AttachChildNode(rootNode, "PopupLastY", PopupLastY.ToString());
 
             XmlElement statsNode = AttachChildNode(rootNode, "Stats", null);
             SaveStats(statsNode);
@@ -74,7 +93,12 @@ namespace ActStatter
             sb.AppendLine("  ParseOnImport = " + ParseOnImport);
             sb.AppendLine("  GraphShowAverage = " + GraphShowAverage);
             sb.AppendLine("  GraphShowEncDps = " + GraphShowEncDps);
+            sb.AppendLine("  GraphShowEncHps = " + GraphShowEncHps);
             sb.AppendLine("  EncDpsResolution = " + EncDpsResolution.ToString());
+            sb.AppendLine("  PopupLastW = " + PopupLastW.ToString());
+            sb.AppendLine("  PopupLastH = " + PopupLastH.ToString());
+            sb.AppendLine("  PopupLastX = " + PopupLastX.ToString());
+            sb.AppendLine("  PopupLastY = " + PopupLastY.ToString());
             List<string> _trackedStats = new List<string>();
             foreach (StatterStat stat in Stats)
             {
@@ -85,9 +109,9 @@ namespace ActStatter
             return sb.ToString();
         }
 
-        private T RetrieveSetting<T>(XmlNode attachPoint, string name)
+        private T RetrieveSetting<T>(XmlNode attachPoint, string name, T defaultVal)
         {
-            T settingVal = default(T);
+            T settingVal = defaultVal;
 
             XmlNode settingNode = attachPoint.SelectSingleNode(name);
             if (settingNode != null)

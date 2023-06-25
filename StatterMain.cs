@@ -24,6 +24,7 @@ namespace ActStatter
 #endif
 
         public static int PLUGIN_ID = 90;
+        public readonly static string HELP_PAGE = "https://github.com/eq2reapp/ActStatter/wiki/Help";
 
         public const string MACRO_FILENAME = "statter.txt";
         public const string DYNAMICDATA_NOP = "dynamicdata Start";
@@ -42,7 +43,7 @@ namespace ActStatter
         }
 
         // Keep a log handy for debugging
-        private List<String> Logs = new List<string>();
+        private List<string> Logs = new List<string>();
 
         // These elements are given to us by the plugin engine
         private TabPage _pluginScreenSpace = null;
@@ -82,12 +83,17 @@ namespace ActStatter
 
         public void Log(string message)
         {
-            Logs.Add(String.Format("[{0}] {1}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), message));
+            Logs.Add(string.Format("[{0}] {1}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), message));
         }
 
-        public String[] GetLogs()
+        public string[] GetLogs()
         {
             return Logs.ToArray();
+        }
+
+        public void ClearLogs()
+        {
+            Logs.Clear();
         }
 
         // The entry-point from the ACT plugin engine, called when the plugin is loaded
@@ -289,6 +295,8 @@ namespace ActStatter
             // Also check for DarqUI StatMon loglines
             if (_regexDarqStatMonLine.IsMatch(logLine))
             {
+                if (!_usingDarqUI)
+                    Log("Receiving stats from Darq");
                 _usingDarqUI = true;
 
                 marker = ", \"";

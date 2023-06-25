@@ -165,9 +165,15 @@ namespace ActStatter.UI
             txtLogs.Lines = _statter.GetLogs();
         }
 
+        private void btnClearLogs_Click(object sender, EventArgs e)
+        {
+            _statter.ClearLogs();
+            txtLogs.Lines = null;
+        }
+
         private void lnkOpenHelp_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            Process.Start("https://github.com/eq2reapp/ActStatter/wiki/Help");
+            Process.Start(StatterMain.HELP_PAGE);
         }
     }
 }

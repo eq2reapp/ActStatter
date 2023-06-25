@@ -36,6 +36,7 @@
             this.tabExtra = new System.Windows.Forms.TabControl();
             this.tabInstructions = new System.Windows.Forms.TabPage();
             this.pnlInstructions = new System.Windows.Forms.Panel();
+            this.lnkOpenHelp = new System.Windows.Forms.LinkLabel();
             this.tabLogs = new System.Windows.Forms.TabPage();
             this.btnRefresh = new System.Windows.Forms.Button();
             this.btnCopyLogs = new System.Windows.Forms.Button();
@@ -43,7 +44,7 @@
             this.grpTrackedStats = new System.Windows.Forms.GroupBox();
             this.pnlStatDetails = new System.Windows.Forms.FlowLayoutPanel();
             this.btnAdd = new System.Windows.Forms.Button();
-            this.lnkOpenHelp = new System.Windows.Forms.LinkLabel();
+            this.btnClearLogs = new System.Windows.Forms.Button();
             this.pnlMain.SuspendLayout();
             this.grpStatterConfig.SuspendLayout();
             this.grpGeneralOptions.SuspendLayout();
@@ -148,8 +149,22 @@
             this.pnlInstructions.Size = new System.Drawing.Size(565, 580);
             this.pnlInstructions.TabIndex = 13;
             // 
+            // lnkOpenHelp
+            // 
+            this.lnkOpenHelp.ActiveLinkColor = System.Drawing.Color.Blue;
+            this.lnkOpenHelp.AutoSize = true;
+            this.lnkOpenHelp.Location = new System.Drawing.Point(18, 18);
+            this.lnkOpenHelp.Name = "lnkOpenHelp";
+            this.lnkOpenHelp.Size = new System.Drawing.Size(166, 13);
+            this.lnkOpenHelp.TabIndex = 0;
+            this.lnkOpenHelp.TabStop = true;
+            this.lnkOpenHelp.Text = "Open a help page in your browser";
+            this.lnkOpenHelp.VisitedLinkColor = System.Drawing.Color.Blue;
+            this.lnkOpenHelp.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.lnkOpenHelp_LinkClicked);
+            // 
             // tabLogs
             // 
+            this.tabLogs.Controls.Add(this.btnClearLogs);
             this.tabLogs.Controls.Add(this.btnRefresh);
             this.tabLogs.Controls.Add(this.btnCopyLogs);
             this.tabLogs.Controls.Add(this.txtLogs);
@@ -233,18 +248,16 @@
             this.btnAdd.UseVisualStyleBackColor = true;
             this.btnAdd.Click += new System.EventHandler(this.btnAdd_Click);
             // 
-            // lnkOpenHelp
+            // btnClearLogs
             // 
-            this.lnkOpenHelp.ActiveLinkColor = System.Drawing.Color.Blue;
-            this.lnkOpenHelp.AutoSize = true;
-            this.lnkOpenHelp.Location = new System.Drawing.Point(18, 18);
-            this.lnkOpenHelp.Name = "lnkOpenHelp";
-            this.lnkOpenHelp.Size = new System.Drawing.Size(166, 13);
-            this.lnkOpenHelp.TabIndex = 0;
-            this.lnkOpenHelp.TabStop = true;
-            this.lnkOpenHelp.Text = "Open a help page in your browser";
-            this.lnkOpenHelp.VisitedLinkColor = System.Drawing.Color.Blue;
-            this.lnkOpenHelp.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.lnkOpenHelp_LinkClicked);
+            this.btnClearLogs.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.btnClearLogs.Location = new System.Drawing.Point(168, 556);
+            this.btnClearLogs.Name = "btnClearLogs";
+            this.btnClearLogs.Size = new System.Drawing.Size(75, 23);
+            this.btnClearLogs.TabIndex = 3;
+            this.btnClearLogs.Text = "Clear";
+            this.btnClearLogs.UseVisualStyleBackColor = true;
+            this.btnClearLogs.Click += new System.EventHandler(this.btnClearLogs_Click);
             // 
             // StatterPluginTab
             // 
@@ -288,5 +301,6 @@
         private System.Windows.Forms.Button btnCopyLogs;
         private System.Windows.Forms.Button btnRefresh;
         private System.Windows.Forms.LinkLabel lnkOpenHelp;
+        private System.Windows.Forms.Button btnClearLogs;
     }
 }

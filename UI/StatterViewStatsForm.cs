@@ -4,6 +4,8 @@ using Advanced_Combat_Tracker;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
+using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 
@@ -11,6 +13,10 @@ namespace ActStatter.UI
 {
     public partial class StatterViewStatsForm : Form
     {
+        private const string OPTION_ENC_NONE = "None";
+        private const string OPTION_ENC_DPS = "DPS";
+        private const string OPTION_ENC_HPS = "HPS";
+
         protected List<StatterEncounterStat> _stats = new List<StatterEncounterStat>();
         private DateTime _start = DateTime.MinValue;
         private DateTime _end = DateTime.MinValue;
@@ -18,6 +24,7 @@ namespace ActStatter.UI
         private StatterMain _statter = null;
         private EncounterData _encData = null;
         private StatterSettings _settings = new StatterSettings();
+        private bool _loaded = false;
 
         public StatterViewStatsForm(StatterMain statter, StatterSettings settings)
         {
@@ -25,18 +32,46 @@ namespace ActStatter.UI
             _settings = settings;
 
             InitializeComponent();
-            statGraph.UseSettings(_settings);
+
+            // Settings may be null if a static object is used to measure the bounds in GetDefaultSize()
+            if (_settings != null)
+                statGraph.UseSettings(_settings);
+        }
+
+        public static Size GetDefaultSize()
+        {
+            return (new StatterViewStatsForm(null, null)).Size;
         }
 
         private void ViewStats_Load(object sender, EventArgs e)
         {
+            // Load some initial values from settings
             chkShowAverage.Checked = _settings.GraphShowAverage;
-            chkShowEncDps.Checked = _settings.GraphShowEncDps;
+
+            cmbShowValues.Items.Clear();
+            cmbShowValues.Items.AddRange(new string[] {
+                OPTION_ENC_NONE,
+                OPTION_ENC_DPS,
+                OPTION_ENC_HPS
+            });
+            if (_settings.GraphShowEncDps)
+                cmbShowValues.SelectedItem = OPTION_ENC_DPS;
+            else if (_settings.GraphShowEncHps)
+                cmbShowValues.SelectedItem = OPTION_ENC_HPS;
+            else
+                cmbShowValues.SelectedItem = OPTION_ENC_NONE;
+
             sliderEncDpsResolution.Value =
                 Math.Min(sliderEncDpsResolution.Maximum, 
                          Math.Max(sliderEncDpsResolution.Minimum, _settings.EncDpsResolution));
 
+            // Load the dynamic help text
             StringBuilder sbNotes = new StringBuilder();
+            if (_stats.Count < 1)
+            {
+                sbNotes.AppendLine("It seems that you have no stats recording. Please review the help page to learn how to setup stats.");
+                sbNotes.AppendLine();
+            }
             if (_statter.DarqUIDetected)
             {
                 sbNotes.AppendLine("Overcapped stats are shown as thicker line segments in the graph. Only stats from DarqUI can report overcap status.");
@@ -45,7 +80,42 @@ namespace ActStatter.UI
             sbNotes.AppendLine("The shaded area under the graph line represents the average value over the full duration (if enabled).");
             sbNotes.AppendLine();
             sbNotes.AppendLine("Click inside the graph to set a line marker for the stat value. Right-click to clear all markers.");
+            sbNotes.AppendLine();
+            sbNotes.AppendLine("Use the Period slider to alter the smoothness/peakiness of the Encounter line. ACT's default is 5 seconds.");
             lblNotes.Text = sbNotes.ToString();
+
+            if (!_statter.DarqUIDetected)
+                dgStats.Columns.Remove("OC");
+
+            _loaded = true;
+
+            UpdateGraph();
+        }
+
+        // When the user selects one or more stats in the datagrid, render a graph
+        // for the selected stats
+        private void dgStats_SelectionChanged(object sender, EventArgs e)
+        {
+            UpdateGraph();
+        }
+
+        private void StatterViewStatsForm_Shown(object sender, EventArgs e)
+        {
+            this.SetBounds(_settings.PopupLastX, _settings.PopupLastY, _settings.PopupLastW, _settings.PopupLastH);
+        }
+
+        private void StatterViewStatsForm_SizeOrLocationChanged(object sender, EventArgs e)
+        {
+            // Allow the initial load to complete before saving the bounds, otherwise the initial
+            // load will just save default values.
+            if (_loaded)
+            {
+                _settings.PopupLastX = this.Bounds.X;
+                _settings.PopupLastY = this.Bounds.Y;
+                _settings.PopupLastW = this.Bounds.Width;
+                _settings.PopupLastH = this.Bounds.Height;
+                _settings.Save();
+            }
         }
 
         private void UpdateGraph()
@@ -64,17 +134,7 @@ namespace ActStatter.UI
                 }
             }
 
-            if (selectedStats.Count > 0)
-            {
-                statGraph.DrawStats(selectedStats, _start, _end, _encData);
-            }
-        }
-
-        // When the user selects one or more stats in the datagrid, render a graph
-        // for the selected stats
-        private void dgStats_SelectionChanged(object sender, EventArgs e)
-        {
-            UpdateGraph();
+            statGraph.DrawStats(selectedStats, _start, _end, _encData);
         }
 
         public void ShowStats(List<StatterStatReading> readings, EncounterData encounterData)
@@ -201,9 +261,21 @@ namespace ActStatter.UI
             this.Show();
         }
 
-        private void chkShowEncDps_CheckedChanged(object sender, EventArgs e)
+        private void cmbShowValues_SelectedIndexChanged(object sender, EventArgs e)
         {
-            _settings.GraphShowEncDps = chkShowEncDps.Checked;
+            _settings.GraphShowEncDps = false;
+            _settings.GraphShowEncHps = false;
+            switch (cmbShowValues.SelectedItem)
+            {
+                case OPTION_ENC_NONE:
+                    break;
+                case OPTION_ENC_DPS:
+                    _settings.GraphShowEncDps = true;
+                    break;
+                case OPTION_ENC_HPS:
+                    _settings.GraphShowEncHps = true;
+                    break;
+            }
             _settings.Save();
 
             UpdateGraph();
@@ -223,6 +295,11 @@ namespace ActStatter.UI
             _settings.Save();
 
             UpdateGraph();
+        }
+
+        private void btnHelp_Click(object sender, EventArgs e)
+        {
+            Process.Start(StatterMain.HELP_PAGE);
         }
     }
 }
