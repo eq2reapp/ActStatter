@@ -36,6 +36,9 @@
             this.lblResolution = new System.Windows.Forms.Label();
             this.cmbShowValues = new System.Windows.Forms.ComboBox();
             this.lblShowVals = new System.Windows.Forms.Label();
+            this.btnHelp = new System.Windows.Forms.Button();
+            this.lblPlayer = new System.Windows.Forms.Label();
+            this.cmbPlayer = new System.Windows.Forms.ComboBox();
             this.statGraph = new ActStatter.UI.StatterStatGraph();
             this.dgStats = new ActStatter.UI.StatterFastDataGrid();
             this.ColStat = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -43,7 +46,6 @@
             this.ColMax = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Avg = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.OC = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.btnHelp = new System.Windows.Forms.Button();
             this.pnlGraph.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.sliderEncDpsResolution)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgStats)).BeginInit();
@@ -138,6 +140,36 @@
             this.lblShowVals.TabIndex = 10;
             this.lblShowVals.Text = "Show Enc";
             // 
+            // btnHelp
+            // 
+            this.btnHelp.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnHelp.Location = new System.Drawing.Point(943, 628);
+            this.btnHelp.Name = "btnHelp";
+            this.btnHelp.Size = new System.Drawing.Size(29, 23);
+            this.btnHelp.TabIndex = 12;
+            this.btnHelp.Text = "?";
+            this.btnHelp.UseVisualStyleBackColor = true;
+            this.btnHelp.Click += new System.EventHandler(this.btnHelp_Click);
+            // 
+            // lblPlayer
+            // 
+            this.lblPlayer.AutoSize = true;
+            this.lblPlayer.Location = new System.Drawing.Point(5, 11);
+            this.lblPlayer.Name = "lblPlayer";
+            this.lblPlayer.Size = new System.Drawing.Size(36, 13);
+            this.lblPlayer.TabIndex = 13;
+            this.lblPlayer.Text = "Player";
+            // 
+            // cmbPlayer
+            // 
+            this.cmbPlayer.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbPlayer.FormattingEnabled = true;
+            this.cmbPlayer.Location = new System.Drawing.Point(47, 8);
+            this.cmbPlayer.Name = "cmbPlayer";
+            this.cmbPlayer.Size = new System.Drawing.Size(140, 21);
+            this.cmbPlayer.TabIndex = 14;
+            this.cmbPlayer.SelectedIndexChanged += new System.EventHandler(this.cmbPlayer_SelectedIndexChanged);
+            // 
             // statGraph
             // 
             this.statGraph.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
@@ -167,7 +199,7 @@
             this.Avg,
             this.OC});
             this.dgStats.GridColor = System.Drawing.SystemColors.ControlLight;
-            this.dgStats.Location = new System.Drawing.Point(6, 6);
+            this.dgStats.Location = new System.Drawing.Point(6, 39);
             this.dgStats.MultiSelect = false;
             this.dgStats.Name = "dgStats";
             this.dgStats.ReadOnly = true;
@@ -177,7 +209,7 @@
             this.dgStats.ShowCellToolTips = false;
             this.dgStats.ShowEditingIcon = false;
             this.dgStats.ShowRowErrors = false;
-            this.dgStats.Size = new System.Drawing.Size(335, 436);
+            this.dgStats.Size = new System.Drawing.Size(335, 403);
             this.dgStats.TabIndex = 1;
             this.dgStats.SelectionChanged += new System.EventHandler(this.dgStats_SelectionChanged);
             // 
@@ -231,22 +263,13 @@
             this.OC.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             this.OC.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             // 
-            // btnHelp
-            // 
-            this.btnHelp.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnHelp.Location = new System.Drawing.Point(943, 628);
-            this.btnHelp.Name = "btnHelp";
-            this.btnHelp.Size = new System.Drawing.Size(29, 23);
-            this.btnHelp.TabIndex = 12;
-            this.btnHelp.Text = "?";
-            this.btnHelp.UseVisualStyleBackColor = true;
-            this.btnHelp.Click += new System.EventHandler(this.btnHelp_Click);
-            // 
             // StatterViewStatsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(984, 661);
+            this.Controls.Add(this.cmbPlayer);
+            this.Controls.Add(this.lblPlayer);
             this.Controls.Add(this.btnHelp);
             this.Controls.Add(this.lblShowVals);
             this.Controls.Add(this.cmbShowValues);
@@ -292,5 +315,7 @@
         private System.Windows.Forms.ComboBox cmbShowValues;
         private System.Windows.Forms.Label lblShowVals;
         private System.Windows.Forms.Button btnHelp;
+        private System.Windows.Forms.Label lblPlayer;
+        private System.Windows.Forms.ComboBox cmbPlayer;
     }
 }

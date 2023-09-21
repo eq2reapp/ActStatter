@@ -60,11 +60,11 @@ namespace ActStatter.Model
         }
 
         // Add a reading from DarqUI's StatMon logging.
-        public void AddDarqReading(string logLine, DateTime detectedTime)
+        public void AddDarqReading(string logLine, DateTime detectedTime, string player)
         {
             try
             {
-                var reading = ParseDarqReading(logLine, detectedTime);
+                var reading = ParseDarqReading(logLine, detectedTime, player);
                 _readings.Add(reading);
             }
             catch { }
@@ -101,7 +101,7 @@ namespace ActStatter.Model
             return reading;
         }
 
-        private StatterStatReading ParseDarqReading(string logReading, DateTime logTime)
+        private StatterStatReading ParseDarqReading(string logReading, DateTime logTime, string player)
         {
             EnsureLocaleForDoubleParsing();
 
@@ -115,7 +115,8 @@ namespace ActStatter.Model
                 reading = new StatterStatReading(StatterStatReading.StatSource.Darq)
                 {
                     Stat = stat,
-                    Time = logTime
+                    Time = logTime,
+                    Player = player
                 };
 
                 string cleaned = parts[2].Replace("%", "").Replace(",", "");

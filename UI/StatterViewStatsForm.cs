@@ -22,6 +22,7 @@ namespace ActStatter.UI
         private DateTime _end = DateTime.MinValue;
         private string _title = "";
         private StatterMain _statter = null;
+        private List<StatterStatReading> _readings = null;
         private EncounterData _encData = null;
         private StatterSettings _settings = new StatterSettings();
         private bool _loaded = false;
@@ -139,12 +140,28 @@ namespace ActStatter.UI
 
         public void ShowStats(List<StatterStatReading> readings, EncounterData encounterData)
         {
+            _readings = readings;
             _encData = encounterData;
             _start = encounterData.StartTime;
             _end = encounterData.EndTime;
             _title = string.Format("{0} - {1}", encounterData.ZoneName, encounterData.Title);
 
-            _statter.Log(string.Format("Showing {0} stat reading(s)", readings.Count));
+            // Load the player drop-down
+            List<string> players = new List<string>();
+            players.Add(StatterStatReading.DEFAULT_PLAYER_NAME);
+            foreach (var reading in readings)
+                if (reading.Player != StatterStatReading.DEFAULT_PLAYER_NAME && !players.Contains(reading.Player))
+                    players.Add(reading.Player);
+            cmbPlayer.BeginUpdate();
+            cmbPlayer.Items.AddRange(Array.ConvertAll(players.ToArray(), item => item));
+            cmbPlayer.EndUpdate();
+            cmbPlayer.SelectedIndex = 0;
+        }
+
+        public void ShowStatsForPlayer(string player)
+        {
+            var readings = _readings.FindAll(reading => reading.Player.Equals(player));
+            _statter.Log(string.Format("Showing {0} stat reading(s) for {1}", readings.Count, player));
 
             // Group all the readings by their stat
             _stats.Clear();
@@ -300,6 +317,12 @@ namespace ActStatter.UI
         private void btnHelp_Click(object sender, EventArgs e)
         {
             Process.Start(StatterMain.HELP_PAGE);
+        }
+
+        private void cmbPlayer_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            string player = cmbPlayer.SelectedItem.ToString();
+            ShowStatsForPlayer(player);
         }
     }
 }
