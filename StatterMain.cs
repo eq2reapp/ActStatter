@@ -58,7 +58,11 @@ namespace ActStatter
         // Since we're searching the main ACT form object hierarchy for object references,
         // use a delay timer to give it time to load
         private Timer _timerDelayedAttach = new Timer();
+#if DEBUG
+        private const int DELAY_ATTACH_SECONDS = 2 * 1000;
+#else
         private const int DELAY_ATTACH_SECONDS = 5 * 1000;
+#endif
 
         // Our parsing-sepecifc state vars
         private List<Func<LogLineEventArgs, bool>> _readHandlers = new List<Func<LogLineEventArgs, bool>>();

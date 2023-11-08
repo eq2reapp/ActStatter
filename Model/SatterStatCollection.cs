@@ -80,7 +80,7 @@ namespace ActStatter.Model
                 Time = logTime
             };
 
-            double temp = 0;
+            double temp;
             string[] parts;
 
             switch (stat.Key)
@@ -105,7 +105,7 @@ namespace ActStatter.Model
         {
             EnsureLocaleForDoubleParsing();
 
-            double temp = 0;
+            double temp;
             // Format is like: DarqUI_StatMon:Fervor:1,344.1%:OC:#68A462
             string[] parts = logReading.Split(new string[] { ":" }, StringSplitOptions.None);
             StatterStatReading reading = null;

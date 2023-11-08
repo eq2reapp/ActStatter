@@ -43,7 +43,7 @@
             this.cmbStat.FormattingEnabled = true;
             this.cmbStat.Location = new System.Drawing.Point(24, 38);
             this.cmbStat.Name = "cmbStat";
-            this.cmbStat.Size = new System.Drawing.Size(215, 21);
+            this.cmbStat.Size = new System.Drawing.Size(279, 21);
             this.cmbStat.TabIndex = 0;
             // 
             // lblName
@@ -63,6 +63,7 @@
             this.pnlColour.Name = "pnlColour";
             this.pnlColour.Size = new System.Drawing.Size(29, 22);
             this.pnlColour.TabIndex = 5;
+            this.pnlColour.Visible = false;
             this.pnlColour.Click += new System.EventHandler(this.pnlColour_Click);
             // 
             // label3
@@ -73,6 +74,7 @@
             this.label3.Size = new System.Drawing.Size(37, 13);
             this.label3.TabIndex = 6;
             this.label3.Text = "Colour";
+            this.label3.Visible = false;
             // 
             // btnOk
             // 

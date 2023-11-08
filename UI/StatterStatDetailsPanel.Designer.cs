@@ -45,6 +45,7 @@
             this.pnlColour.Name = "pnlColour";
             this.pnlColour.Size = new System.Drawing.Size(29, 22);
             this.pnlColour.TabIndex = 1;
+            this.pnlColour.Visible = false;
             this.pnlColour.Click += new System.EventHandler(this.pnlColour_Click);
             // 
             // lblName
@@ -85,14 +86,14 @@
             this.btnDelete.UseVisualStyleBackColor = true;
             this.btnDelete.Click += new System.EventHandler(this.btnDelete_Click);
             // 
-            // StatDetailPanel
+            // StatterStatDetailsPanel
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ControlLight;
             this.Controls.Add(this.panel1);
             this.Margin = new System.Windows.Forms.Padding(1);
-            this.Name = "StatDetailPanel";
+            this.Name = "StatterStatDetailsPanel";
             this.Padding = new System.Windows.Forms.Padding(1);
             this.Size = new System.Drawing.Size(220, 31);
             this.Load += new System.EventHandler(this.StatDetails_Load);
