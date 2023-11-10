@@ -29,7 +29,6 @@
         private void InitializeComponent()
         {
             this.pnlGraph = new System.Windows.Forms.Panel();
-            this.statGraph = new ActStatter.UI.StatterStatGraph();
             this.pnlGraphControls = new System.Windows.Forms.Panel();
             this.lblNotes = new System.Windows.Forms.Label();
             this.chkShowAverage = new System.Windows.Forms.CheckBox();
@@ -42,6 +41,7 @@
             this.btnCreateData = new System.Windows.Forms.Button();
             this.lbPlayers = new System.Windows.Forms.CheckedListBox();
             this.pnlExtraControls = new System.Windows.Forms.Panel();
+            this.statGraph = new ActStatter.UI.StatterStatGraph();
             this.dgStats = new ActStatter.UI.StatterFastDataGrid();
             this.ColStat = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Player = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -67,15 +67,6 @@
             this.pnlGraph.Padding = new System.Windows.Forms.Padding(5);
             this.pnlGraph.Size = new System.Drawing.Size(637, 620);
             this.pnlGraph.TabIndex = 2;
-            // 
-            // statGraph
-            // 
-            this.statGraph.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.statGraph.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.statGraph.Location = new System.Drawing.Point(5, 5);
-            this.statGraph.Name = "statGraph";
-            this.statGraph.Size = new System.Drawing.Size(627, 610);
-            this.statGraph.TabIndex = 1;
             // 
             // pnlGraphControls
             // 
@@ -204,6 +195,15 @@
             this.pnlExtraControls.Name = "pnlExtraControls";
             this.pnlExtraControls.Size = new System.Drawing.Size(466, 38);
             this.pnlExtraControls.TabIndex = 17;
+            // 
+            // statGraph
+            // 
+            this.statGraph.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.statGraph.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.statGraph.Location = new System.Drawing.Point(5, 5);
+            this.statGraph.Name = "statGraph";
+            this.statGraph.Size = new System.Drawing.Size(627, 610);
+            this.statGraph.TabIndex = 1;
             // 
             // dgStats
             // 

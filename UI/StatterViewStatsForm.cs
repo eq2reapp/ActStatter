@@ -20,7 +20,7 @@ namespace ActStatter.UI
         private List<StatterEncounterStat> _stats = new List<StatterEncounterStat>();
         private List<StatterEncounterStat> _selectedStats = new List<StatterEncounterStat>();
         private List<string> _selectedPlayers = new List<string>();
-        private bool _selectingStat = false;
+        private bool _maskStatSelection = false;
         private DateTime _start = DateTime.MinValue;
         private DateTime _end = DateTime.MinValue;
         private string _title = "";
@@ -156,6 +156,8 @@ namespace ActStatter.UI
 
         private void lbPlayers_MouseUp(object sender, MouseEventArgs e)
         {
+            var initialStat = _settings.LastStat;
+
             List<string> selectedPlayers = new List<string>();
             for (int i = 0; i < lbPlayers.CheckedItems.Count; i++)
                 selectedPlayers.Add(lbPlayers.CheckedItems[i].ToString());
@@ -164,11 +166,16 @@ namespace ActStatter.UI
             // no event on the control itself to indicate this.
             if (string.Join(":", selectedPlayers) != string.Join(":", _selectedPlayers))
             {
+                ClearSelectedStats();
+
                 // Keep track of these players for next time the listbox has a click
                 _selectedPlayers = selectedPlayers;
+                _settings.LastPlayers = String.Join(", ", _selectedPlayers);
+                _settings.Save();
 
                 ShowTableStatsForPlayers(selectedPlayers);
-                ClearSelectedStats();
+                if (!string.IsNullOrEmpty(initialStat))
+                    SelectAllOfStat(initialStat);
                 UpdateGraph();
             }
         }
@@ -199,58 +206,22 @@ namespace ActStatter.UI
          */
         private void dgStats_SelectionChanged(object sender, EventArgs e)
         {
-            if (_selectingStat || dgStats.SelectedCells.Count < 1 || dgStats.Rows.Count < 1)
+            if (_maskStatSelection || dgStats.SelectedCells.Count < 1 || dgStats.Rows.Count < 1)
                 return;
-
-            // Since we're manually changing selections in this logic, ensure the
-            // manual selections don't trigger other selection logic until we're done
-            _selectingStat = true;
 
             int selectedRowIndex = dgStats.SelectedCells[0].RowIndex;
             var selectedRow = dgStats.Rows[selectedRowIndex];
-            //if (selectedRow.Cells.Count < 1 || selectedRow.Cells[0].Value == null)
-            //    return;
             string statName = selectedRow.Cells[0].Value.ToString();
-            List<string> playerNames = new List<string>();
-
-            // First unselect all rows
-            for (int i = 0; i < dgStats.Rows.Count; i++)
-                dgStats.Rows[i].Selected = false;
-
-            // Select the triggering row
-            selectedRow.Selected = true;
-            playerNames.Add(selectedRow.Cells[1].Value.ToString());
-
-            // Step through the rows after the current one, and select them as long
-            // as they don't have a stat name (so they're the same as the triggered stat)
-            for (int i = selectedRowIndex + 1; i < dgStats.Rows.Count; i++)
-            {
-                var curRow = dgStats.Rows[i];
-                if (!string.IsNullOrEmpty(curRow.Cells[0].Value.ToString()))
-                    break;
-                curRow.Selected = true;
-                playerNames.Add(curRow.Cells[1].Value.ToString());
-            }
-
-            // If the triggering row does not have a stat name, step through the rows before
-            // the current one, and select them until we find one that has a stat name
             if (string.IsNullOrEmpty(statName))
                 for (int i = selectedRowIndex - 1; i >= 0; i--)
                 {
                     var curRow = dgStats.Rows[i];
-                    curRow.Selected = true;
-                    playerNames.Add(curRow.Cells[1].Value.ToString());
                     statName = curRow.Cells[0].Value.ToString();
                     if (!string.IsNullOrEmpty(statName))
                         break;
                 }
+            SelectAllOfStat(statName);
 
-            // Select all the stat/player combos for whose rows were selected
-            _selectedStats.Clear();
-            playerNames.ForEach(playerName => _selectedStats.Add(_stats.Find(
-                stat => stat.Stat.Name.Equals(statName) && stat.Player.Equals(playerName))));
-
-            _selectingStat = false;
             chkShowAverage.Enabled = _selectedStats.Count < 2;
             UpdateGraph();
         }
@@ -302,6 +273,8 @@ namespace ActStatter.UI
          */
         public void ShowStats(List<StatterStatReading> readings, EncounterData encounterData)
         {
+            this.Show();
+
             _readings = readings;
             _encData = encounterData;
             _start = encounterData.StartTime;
@@ -316,18 +289,32 @@ namespace ActStatter.UI
             players.Sort();
             players.Insert(0, StatterStatReading.DEFAULT_PLAYER_NAME);
 
+            _selectedPlayers.Clear();
+            var lastSelectedPlayers = new List<string>(_settings.LastPlayers.Split(new string[] { ", " }, StringSplitOptions.RemoveEmptyEntries));
             lbPlayers.BeginUpdate();
             lbPlayers.Items.Clear();
-            lbPlayers.Items.AddRange(Array.ConvertAll(players.ToArray(), item => item));
+            players.ForEach(player =>
+            {
+                int index = lbPlayers.Items.Add(player);
+                if (lastSelectedPlayers.Contains(player))
+                {
+                    lbPlayers.SetItemChecked(index, true);
+                    _selectedPlayers.Add(player);
+                }
+            });
             lbPlayers.EndUpdate();
-            lbPlayers.SetItemChecked(0, true);
-            _selectedPlayers.Clear();
-            _selectedPlayers.Add(StatterStatReading.DEFAULT_PLAYER_NAME);
+            if (lbPlayers.CheckedItems.Count < 1)
+            {
+                lbPlayers.SetItemChecked(0, true);
+                _selectedPlayers.Add(StatterStatReading.DEFAULT_PLAYER_NAME);
+            }
 
             // Calculate then show min/max etc for each stat for the initial selected player
+            var initialStat = _settings.LastStat;
             ShowTableStatsForPlayers(_selectedPlayers);
-
-            this.Show();
+            if (!string.IsNullOrEmpty(initialStat))
+                SelectAllOfStat(initialStat);
+            UpdateGraph();
         }
 
         public void ShowTableStatsForPlayers(List<string> players)
@@ -420,6 +407,8 @@ namespace ActStatter.UI
             }
 
             ShowStatsTable();
+            if (_selectedStats.Count < 1)
+                SelectDefaultStat();
         }
 
         private void ShowStatsTable()
@@ -463,7 +452,9 @@ namespace ActStatter.UI
 
                 Text = string.Format("Stats for {0:h':'mm':'ss tt} - {1:h':'mm':'ss tt} ({2})", _start, _end, _title);
                 dgStats.Columns["OC"].Visible = _statter != null && _statter.DarqUIDetected;
+                _maskStatSelection = true;
                 dgStats.DataSource = dt;
+                _maskStatSelection = false;
             }
         }
 
@@ -475,12 +466,68 @@ namespace ActStatter.UI
 
         private void ClearSelectedStats()
         {
-            _selectingStat = true;
+            _maskStatSelection = true;
             for (int i = 0; i < dgStats.Rows.Count; i++)
                 dgStats.Rows[i].Selected = false;
-            _selectingStat = false;
+            _maskStatSelection = false;
 
             _selectedStats.Clear();
+        }
+
+        private void SelectDefaultStat()
+        {
+            if (dgStats.Rows.Count > 0)
+                dgStats.Rows[0].Selected = true;
+        }
+
+        private void SelectAllOfStat(string statName)
+        {
+            // Since we're manually changing selections in this logic, ensure the
+            // manual selections don't trigger other selection logic until we're done
+            _maskStatSelection = true;
+
+            // First unselect all rows
+            for (int i = 0; i < dgStats.Rows.Count; i++)
+                dgStats.Rows[i].Selected = false;
+
+            // Now step through all rows looking for the stat, and select those rows
+            bool foundFirstStatRow = false;
+            List<string> playerNames = new List<string>();
+            for (int i = 0; i < dgStats.Rows.Count; i++)
+            {
+                var curRow = dgStats.Rows[i];
+                var curStatName = curRow.Cells[0].Value.ToString();
+                var curPlayerName = curRow.Cells[1].Value.ToString();
+                if (!foundFirstStatRow)
+                {
+                    if (curStatName.Equals(statName))
+                    {
+                        curRow.Selected = true;
+                        foundFirstStatRow = true;
+                        playerNames.Add(curPlayerName);
+                    }
+                }
+                else
+                {
+                    if (string.IsNullOrEmpty(curStatName))
+                    {
+                        curRow.Selected = true;
+                        playerNames.Add(curPlayerName);
+                    }
+                    else
+                        break;
+                }
+            }
+
+            // Select all the stat/player combos for whose rows were selected
+            _selectedStats.Clear();
+            playerNames.ForEach(playerName => _selectedStats.Add(_stats.Find(
+                stat => stat.Stat.Name.Equals(statName) && stat.Player.Equals(playerName))));
+
+            _settings.LastStat = statName;
+            _settings.Save();
+
+            _maskStatSelection = false;
         }
     }
 }
