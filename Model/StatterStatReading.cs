@@ -4,6 +4,8 @@ namespace ActStatter.Model
 {
     public class StatterStatReading
     {
+        public const string DEFAULT_PLAYER_NAME = "You";
+
         public enum StatSource
         {
             Native,
@@ -14,6 +16,7 @@ namespace ActStatter.Model
         public DateTime Time { get; set; }
         public double Value { get; set; }
         public bool Overcap { get; set; }
+        public string Player { get; set; }
 
         public StatterStatReading() : this(StatSource.Native) { }
 
@@ -22,6 +25,7 @@ namespace ActStatter.Model
             Time = DateTime.Now;
             Overcap = false;
             Source = source;
+            Player = DEFAULT_PLAYER_NAME;
         }
     }
 }

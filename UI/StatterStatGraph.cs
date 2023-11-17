@@ -28,7 +28,7 @@ namespace ActStatter.UI
         private List<GraphPin> _pins = new List<GraphPin>();
 
         // Global margins surrounding the graph area (used for labels)
-        private const int MARGIN_DATA_X_LEFT = 55;
+        private const int MARGIN_DATA_X_LEFT = 140;
         private const int MARGIN_DATA_X_RIGHT = 55;
         private const int MARGIN_DATA_Y_TOP = 30;
         private const int MARGIN_DATA_Y_BOTTOM = 30;
@@ -41,9 +41,40 @@ namespace ActStatter.UI
         private readonly Color LINE_SHADOW_COLOUR = Color.FromArgb(128, 200, 200, 200);
         private const int LINE_SHADOW_ALPHA = 160;
 
+        // Colors for rendered stat lines. Everything after the first
+        // few will be derived.
+        private Color[] _statLineColours =
+        {
+            Color.FromArgb(255, 104, 164, 98),
+            Color.FromArgb(255, 242, 175, 88),
+            Color.FromArgb(255, 53, 108, 154),
+            Color.FromArgb(255, 209, 65, 63),
+            Color.FromArgb(255, 134, 81, 137),
+            Color.White,
+            Color.White,
+            Color.White,
+            Color.White,
+            Color.White,
+            Color.White,
+            Color.White,
+            Color.White,
+            Color.White,
+            Color.White,
+            Color.White,
+            Color.White,
+            Color.White,
+            Color.White,
+            Color.White,
+            Color.White,
+            Color.White,
+            Color.White,
+            Color.White,
+        };
+        private Dictionary<string, Color> _statPlayerLineColourMap = new Dictionary<string, Color>();
+
         // Bounds for the graph drawing area
-        private bool ShowingDps { get { return _settings.GraphShowEncDps && _encDps.Count > 0; } }
-        private bool ShowingHps { get { return _settings.GraphShowEncHps && _encHps.Count > 0; } }
+        private bool ShowingDps { get { return _settings.GraphShowEncDps && _playersEncDps.Count > 0; } }
+        private bool ShowingHps { get { return _settings.GraphShowEncHps && _playersEncHps.Count > 0; } }
         private double DpsAreaRatio = 0.33;
         private int GraphWidth { get { return this.Width - MARGIN_DATA_X_LEFT - MARGIN_DATA_X_RIGHT; } }
         private int GraphHeight { get { return this.Height - MARGIN_DATA_Y_TOP - MARGIN_DATA_Y_BOTTOM; } }
@@ -63,21 +94,23 @@ namespace ActStatter.UI
         private int DpsRight { get { return GraphRight; } }
         private int DpsTop { get { return GraphBottom - DpsHeight; } }
         private int DpsBottom { get { return GraphBottom; } }
+        private int LegendTop { get { return GraphTop; } }
+        private int LegendLeft { get { return 10; } }
 
         // Calculated values used for rendering data points and lines
         private List<StatterEncounterStat> _stats = new List<StatterEncounterStat>();
         private DateTime _startTime = DateTime.MinValue;
         private DateTime _endTime = DateTime.MinValue;
         private double _totalSeconds = -1;
-        private double _minVal = double.MaxValue;
-        private double _maxVal = double.MinValue;
+        private double _minVal = 0;
+        private double _maxVal = 0;
         private double _valueSpread = -1;
         private double _valueAverage = -1;
 
         // Data for rendering enc dps/hps overlays
-        private Dictionary<int, double> _encDps = new Dictionary<int, double>();
+        private Dictionary<string, Dictionary<int, double>> _playersEncDps = new Dictionary<string, Dictionary<int, double>>();
         private double _maxDps = double.MinValue;
-        private Dictionary<int, double> _encHps = new Dictionary<int, double>();
+        private Dictionary<string, Dictionary<int, double>> _playersEncHps = new Dictionary<string, Dictionary<int, double>>();
         private double _maxHps = double.MinValue;
 
         // The off-screen drawing buffer where renders are prepared
@@ -122,6 +155,12 @@ namespace ActStatter.UI
             _bLabels = new SolidBrush(Color.FromArgb(128, 128, 128));
             _pAvg = new Pen(Color.FromArgb(128, 192, 192, 255), 2f);
             _bAvgFill = new SolidBrush(Color.FromArgb(64, 192, 192, 255));
+
+            // Auto-generate extra line colours based on the first 5
+            for (int i = 5; i < _statLineColours.Length; i++)
+            {
+                _statLineColours[i] = ChangeColorBrightness(_statLineColours[i - 5], 1.2f);
+            }
         }
 
         private void CustomDispose()
@@ -141,6 +180,43 @@ namespace ActStatter.UI
             if (_bLabels != null) _bLabels.Dispose();
             if (_pAvg != null) _pAvg.Dispose();
             if (_bAvgFill != null) _bAvgFill.Dispose();
+        }
+
+        private List<string> GetStatPlayers()
+        {
+            List<string> players = new List<string>();
+            foreach (var stat in _stats)
+                if (!players.Contains(stat.Player))
+                    players.Add(stat.Player);
+            if (players.Contains(StatterStatReading.DEFAULT_PLAYER_NAME))
+            {
+                players.Remove(StatterStatReading.DEFAULT_PLAYER_NAME);
+                players.Insert(0, StatterStatReading.DEFAULT_PLAYER_NAME);
+            }
+            return players;
+        }
+
+        private Color ChangeColorBrightness(Color color, float correctionFactor)
+        {
+            float red = (float)color.R;
+            float green = (float)color.G;
+            float blue = (float)color.B;
+
+            if (correctionFactor < 0)
+            {
+                correctionFactor = 1 + correctionFactor;
+                red *= correctionFactor;
+                green *= correctionFactor;
+                blue *= correctionFactor;
+            }
+            else
+            {
+                red *= correctionFactor;
+                green *= correctionFactor;
+                blue *= correctionFactor;
+            }
+
+            return Color.FromArgb(color.A, Math.Min(255, (int)red), Math.Min(255, (int)green), Math.Min(255, (int)blue));
         }
 
         public void UseSettings(StatterSettings settings)
@@ -327,6 +403,17 @@ namespace ActStatter.UI
                 g.DrawString(_endTime.ToString("h':'mm':'ss"), this.Font, _bLabels, GraphRight + 20, GraphBottom + 8, _sfFarNear);
                 g.DrawString($"Period: {_settings.EncDpsResolution}s", this.Font, _bLabels, GraphLeft + ((GraphRight - GraphLeft) / 2), GraphBottom + 8, _sfMidNear);
 
+                // Draw a legend
+                List<string> players = GetStatPlayers();
+                int yLast = LegendTop;
+                foreach (var player in players)
+                {
+                    using (var pen = new Pen(_statPlayerLineColourMap[player], 2))
+                        g.DrawLine(pen, LegendLeft, yLast, LegendLeft + 15, yLast);
+                    g.DrawString(player, this.Font, _bLabels, LegendLeft + 20, yLast, _sfNearMid);
+                    yLast += 20;
+                }
+
                 // Draw a box representing the average of the stat (note that this only applies
                 // when a single stat is being shown)
                 if (_settings.GraphShowAverage && _valueAverage >= 0)
@@ -340,34 +427,37 @@ namespace ActStatter.UI
                 // Draw the encDps/encHps line
                 if (ShowingDps || ShowingHps)
                 {
-                    Dictionary<int, double> statPoints = new Dictionary<int, double>();
-                    double maxVal = 0;
-                    Color lineColour = Color.Black;
-                    if (ShowingDps)
+                    foreach (string player in _playersEncDps.Keys)
                     {
-                        statPoints = _encDps;
-                        maxVal = _maxDps;
-                        lineColour = Color.DarkRed;
-                    }
-                    else if (ShowingHps)
-                    {
-                        statPoints = _encHps;
-                        maxVal = _maxHps;
-                        lineColour = Color.DarkGreen;
-                    }
-                    List<Tuple<Point, Point>> encLine = new List<Tuple<Point, Point>>();
-                    Point prevPoint = statPoints.Count > 0 ? GetEncValPoint(0, statPoints[0], maxVal) : GetEncValPoint(0, 0, maxVal);
-                    Point curPoint;
-                    foreach (int tTime in statPoints.Keys)
-                    {
-                        curPoint = GetEncValPoint(tTime, statPoints[tTime], maxVal);
+                        Dictionary<int, double> statPoints = new Dictionary<int, double>();
+                        double maxVal = 0;
+                        Color lineColour = Color.Black;
+                        if (ShowingDps)
+                        {
+                            statPoints = _playersEncDps[player];
+                            maxVal = _maxDps;
+                            lineColour = _statPlayerLineColourMap[player];
+                        }
+                        else if (ShowingHps)
+                        {
+                            statPoints = _playersEncHps[player];
+                            maxVal = _maxHps;
+                            lineColour = _statPlayerLineColourMap[player];
+                        }
+                        List<Tuple<Point, Point>> encLine = new List<Tuple<Point, Point>>();
+                        Point prevPoint = statPoints.Count > 0 ? GetEncValPoint(0, statPoints[0], maxVal) : GetEncValPoint(0, 0, maxVal);
+                        Point curPoint;
+                        foreach (int tTime in statPoints.Keys)
+                        {
+                            curPoint = GetEncValPoint(tTime, statPoints[tTime], maxVal);
+                            encLine.Add(new Tuple<Point, Point>(prevPoint, curPoint));
+                            prevPoint = curPoint;
+                        }
+                        // Add the last point
+                        curPoint = GetEncValPoint((int)Math.Floor(_totalSeconds), statPoints.Values.Last(), maxVal);
                         encLine.Add(new Tuple<Point, Point>(prevPoint, curPoint));
-                        prevPoint = curPoint;
+                        RenderLine(g, encLine, lineColour, 2f, 255);
                     }
-                    // Add the last point
-                    curPoint = GetEncValPoint((int)Math.Floor(_totalSeconds), statPoints.Values.Last(), maxVal);
-                    encLine.Add(new Tuple<Point, Point>(prevPoint, curPoint));
-                    RenderLine(g, encLine, lineColour, 2f, 160);
                 }
 
                 // Now render the actual stat value lines
@@ -426,9 +516,10 @@ namespace ActStatter.UI
                         shadowLines.Add(ShiftLines(ocLines, 2, 2), shadowLineOpts);
                         shadowLines.Add(ShiftLines(nonOcLines, 2, 2), shadowLineOpts);
                         shadowLines.Add(ShiftLines(verticalLines, 2, 2), shadowLineOpts);
-                        measurementLines.Add(StretchLines(ocLines, 1, 0), new LineOptions() { Color = encStat.Stat.Colour, Width = LINE_OC_WIDTH });
-                        measurementLines.Add(ShiftLines(nonOcLines, 0, 0), new LineOptions() { Color = encStat.Stat.Colour, Width = LINE_NON_OC_WIDTH });
-                        measurementLines.Add(ShiftLines(verticalLines, 0, 0), new LineOptions() { Color = encStat.Stat.Colour, Width = LINE_NON_OC_WIDTH });
+                        Color measurementLineColour = _statPlayerLineColourMap[encStat.Player];
+                        measurementLines.Add(StretchLines(ocLines, 1, 0), new LineOptions() { Color = measurementLineColour, Width = LINE_OC_WIDTH });
+                        measurementLines.Add(ShiftLines(nonOcLines, 0, 0), new LineOptions() { Color = measurementLineColour, Width = LINE_NON_OC_WIDTH });
+                        measurementLines.Add(ShiftLines(verticalLines, 0, 0), new LineOptions() { Color = measurementLineColour, Width = LINE_NON_OC_WIDTH });
 
                         // Draw the stat label on the axis
                         string statLabel = encStat.Stat.Name.Replace(" ", Environment.NewLine);
@@ -605,7 +696,9 @@ namespace ActStatter.UI
                     if (stat.MaxReading.Value > _maxVal) _maxVal = stat.MaxReading.Value;
                 }
             }
-            _valueSpread = _minVal == double.MaxValue ? 0 : _maxVal - _minVal;
+            _minVal = _minVal == double.MaxValue ? 0 : _minVal;
+            _maxVal = _maxVal == double.MinValue ? 0 : _maxVal;
+            _valueSpread = _maxVal - _minVal;
 
             // Now calculate the average value if that concept applies
             if (_stats.Count == 1 && _stats[0].Readings.Count > 1 && _totalSeconds > 0)
@@ -616,59 +709,84 @@ namespace ActStatter.UI
                 _valueAverage = -1;
 
             // Calculate enc dps/hps
-            _encDps.Clear();
+            _playersEncDps.Clear();
             _maxDps = 0;
-            _encHps.Clear();
+            _playersEncHps.Clear();
             _maxHps = 0;
-            if (_settings.GraphShowEncDps || _settings.GraphShowEncHps)
-            {
-                // To generate the dps/hps graph, just sum up the damage done each second
-                // over the duration of the enncounter. Then pass back over and accumulate
-                // damage done in the last n seconds, where n is defined by the resolution
-                // slider. ACT uses 10 sec in its own graphs (which is the max duration we use,
-                // corresponding to the "lowest" resolution).
-                int accumulateSeconds = _settings.EncDpsResolution;
-                List<MasterSwing> swings = null;
-                foreach (var combatant in encData.Items)
-                    if (combatant.Key.Equals(encData.CharName.ToUpper()))
-                        foreach (var combatItem in combatant.Value.Items)
-                        {
-                            if (_settings.GraphShowEncDps && combatItem.Key.Equals("Outgoing Damage") ||
-                                _settings.GraphShowEncHps && combatItem.Key.Equals("Healed (Out)"))
-                                foreach (var subItem in combatItem.Value.Items)
-                                    if (subItem.Key.Equals("All"))
-                                        swings = subItem.Value.Items;
-                        }
-                if (swings != null)
+            if (_stats.Count > 0 && (_settings.GraphShowEncDps || _settings.GraphShowEncHps))
+                foreach (var player in GetStatPlayers())
                 {
-                    int encDurationSec = Convert.ToInt32(_totalSeconds);
-                    double[] valueAtSecond = new double[encDurationSec];
-                    foreach (var swing in swings)
+                    var playerName = player;
+                    if (playerName.Equals(StatterStatReading.DEFAULT_PLAYER_NAME))
+                        playerName = ActGlobals.charName;
+
+                    // To generate the dps/hps graph, just sum up the damage done each second
+                    // over the duration of the enncounter. Then pass back over and accumulate
+                    // damage done in the last n seconds, where n is defined by the resolution
+                    // slider. ACT uses 10 sec in its own graphs (which is the max duration we use,
+                    // corresponding to the "lowest" resolution).
+                    int accumulateSeconds = _settings.EncDpsResolution;
+                    List<MasterSwing> swings = null;
+                    if (playerName != null)
+                        foreach (var combatant in encData.Items)
+                            if (combatant.Key.Equals(playerName.ToUpper()))
+                                foreach (var combatItem in combatant.Value.Items)
+                                {
+                                    if (_settings.GraphShowEncDps && combatItem.Key.Equals("Outgoing Damage") ||
+                                        _settings.GraphShowEncHps && combatItem.Key.Equals("Healed (Out)"))
+                                        foreach (var subItem in combatItem.Value.Items)
+                                            if (subItem.Key.Equals("All"))
+                                                swings = subItem.Value.Items;
+                                }
+                    if (swings != null)
                     {
-                        int t = Math.Min(encDurationSec - 1, Convert.ToInt32((swing.Time - _startTime).TotalSeconds));
-                        valueAtSecond[t] += swing.Damage.Number;
-                    }
-                    for (int i = 0; i < encDurationSec; i++)
-                    {
-                        double sumInRollingPeriod = 0;
-                        for (int j = i; j > (i - accumulateSeconds) && j >= 0; j--)
-                            sumInRollingPeriod += valueAtSecond[j];
-                        double valPerSec = sumInRollingPeriod / (accumulateSeconds * 1.0);
-                        if (_settings.GraphShowEncDps)
+                        int encDurationSec = Convert.ToInt32(_totalSeconds);
+                        double[] valueAtSecond = new double[encDurationSec];
+                        foreach (var swing in swings)
                         {
-                            if (valPerSec > _maxDps)
-                                _maxDps = valPerSec;
-                            _encDps.Add(i, valPerSec);
+                            int t = Math.Min(encDurationSec - 1, Convert.ToInt32((swing.Time - _startTime).TotalSeconds));
+                            valueAtSecond[t] += swing.Damage.Number;
                         }
-                        else if (_settings.GraphShowEncHps)
+                        var encDps = new Dictionary<int, double>();
+                        var encHps = new Dictionary<int, double>();
+                        for (int i = 0; i < encDurationSec; i++)
                         {
-                            if (valPerSec > _maxHps)
-                                _maxHps = valPerSec;
-                            _encHps.Add(i, valPerSec);
+                            double sumInRollingPeriod = 0;
+                            for (int j = i; j > (i - accumulateSeconds) && j >= 0; j--)
+                                sumInRollingPeriod += valueAtSecond[j];
+                            double valPerSec = sumInRollingPeriod / (accumulateSeconds * 1.0);
+                            if (_settings.GraphShowEncDps)
+                            {
+                                if (valPerSec > _maxDps)
+                                    _maxDps = valPerSec;
+                                encDps.Add(i, valPerSec);
+                            }
+                            else if (_settings.GraphShowEncHps)
+                            {
+                                if (valPerSec > _maxHps)
+                                    _maxHps = valPerSec;
+                                encHps.Add(i, valPerSec);
+                            }
                         }
+                        _playersEncDps.Add(player, encDps);
+                        _playersEncHps.Add(player, encHps);
                     }
                 }
-            }
+
+            // Assign colours to the stat players. "You" should always exclusively use the same (first) colour
+            _statPlayerLineColourMap.Clear();
+            stats.Sort((x, y) => x.Player.CompareTo(y.Player));
+            stats.ForEach(stat =>
+            {
+                if (stat.Player.Equals(StatterStatReading.DEFAULT_PLAYER_NAME))
+                    _statPlayerLineColourMap.Add(stat.Player, _statLineColours[0]);
+            });
+            int defaultPlayerOffset = _statPlayerLineColourMap.Count;
+            stats.ForEach(stat =>
+            {
+                if (!stat.Player.Equals(StatterStatReading.DEFAULT_PLAYER_NAME))
+                    _statPlayerLineColourMap.Add(stat.Player, _statLineColours[1 + (_statPlayerLineColourMap.Count - defaultPlayerOffset)]);
+            });
 
             UpdateGraph();
         }

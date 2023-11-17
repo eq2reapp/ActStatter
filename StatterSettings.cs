@@ -24,6 +24,8 @@ namespace ActStatter
         public int PopupLastY = 0;
         public int PopupLastW = 0;
         public int PopupLastH = 0;
+        public string LastPlayers = "";
+        public string LastStat = "";
 
         public List<StatterStat> Stats = new List<StatterStat>();
 
@@ -57,6 +59,9 @@ namespace ActStatter
             PopupLastX = RetrieveSetting<int>(rootNode, "PopupLastX", (int)Math.Floor((curScreen.WorkingArea.Width - PopupLastW) / 2.0));
             PopupLastY = RetrieveSetting<int>(rootNode, "PopupLastY", (int)Math.Floor((curScreen.WorkingArea.Height - PopupLastH) / 2.0));
 
+            LastPlayers = RetrieveSetting<string>(rootNode, "LastPlayers", "");
+            LastStat = RetrieveSetting<string>(rootNode, "LastStat", "");
+
             LoadStats(rootNode.SelectSingleNode("Stats"));
         }
 
@@ -79,6 +84,8 @@ namespace ActStatter
             AttachChildNode(rootNode, "PopupLastH", PopupLastH.ToString());
             AttachChildNode(rootNode, "PopupLastX", PopupLastX.ToString());
             AttachChildNode(rootNode, "PopupLastY", PopupLastY.ToString());
+            AttachChildNode(rootNode, "LastPlayers", LastPlayers);
+            AttachChildNode(rootNode, "LastStat", LastStat);
 
             XmlElement statsNode = AttachChildNode(rootNode, "Stats", null);
             SaveStats(statsNode);
@@ -99,6 +106,8 @@ namespace ActStatter
             sb.AppendLine("  PopupLastH = " + PopupLastH.ToString());
             sb.AppendLine("  PopupLastX = " + PopupLastX.ToString());
             sb.AppendLine("  PopupLastY = " + PopupLastY.ToString());
+            sb.AppendLine("  LastPlayers = " + LastPlayers);
+            sb.AppendLine("  LastStat = " + LastStat);
             List<string> _trackedStats = new List<string>();
             foreach (StatterStat stat in Stats)
             {

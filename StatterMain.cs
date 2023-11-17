@@ -58,12 +58,16 @@ namespace ActStatter
         // Since we're searching the main ACT form object hierarchy for object references,
         // use a delay timer to give it time to load
         private Timer _timerDelayedAttach = new Timer();
+#if DEBUG
+        private const int DELAY_ATTACH_SECONDS = 2 * 1000;
+#else
         private const int DELAY_ATTACH_SECONDS = 5 * 1000;
+#endif
 
         // Our parsing-sepecifc state vars
         private List<Func<LogLineEventArgs, bool>> _readHandlers = new List<Func<LogLineEventArgs, bool>>();
         private Regex _regexStatPackStart = new Regex(string.Format(@"^{0}\.$", DYNAMICDATA_NOT_FOUND), RegexOptions.Compiled);
-        private Regex _regexDarqStatMonLine = new Regex("^You tell [^\"]+\"DarqUI_StatMon:", RegexOptions.Compiled);
+        private Regex _regexDarqStatMonLine = new Regex(@"tells? [^ ]+ \([0-9]+\), ""DarqUI_StatMon:", RegexOptions.Compiled);
         private ParseState _parseState = ParseState.None;
         private StatterPluginTab _ui = null;
         private StatterSettings _settings = new StatterSettings();
@@ -299,11 +303,22 @@ namespace ActStatter
                     Log("Receiving stats from Darq");
                 _usingDarqUI = true;
 
+                var player = StatterStatReading.DEFAULT_PLAYER_NAME;
+                if (logLine.StartsWith(@"\aPC"))
+                {
+                    string[] parts = logLine.Split(new string[] { " ", ":" }, StringSplitOptions.RemoveEmptyEntries);
+                    if (parts.Length >= 3)
+                    {
+                        player = parts[2];
+                    }
+                }
                 marker = ", \"";
                 markerPos = logLine.IndexOf(marker);
                 if (markerPos >= 0)
+                {
                     logLine = logLine.Substring(markerPos + marker.Length).TrimEnd('"');
-                _statCollection.AddDarqReading(logLine, logInfo.detectedTime);
+                    _statCollection.AddDarqReading(logLine, logInfo.detectedTime, player);
+                }
             }
 
             return parsed;
