@@ -93,11 +93,6 @@ namespace ActStatter.UI
 
             // Load the dynamic help text
             StringBuilder sbNotes = new StringBuilder();
-            if (_stats.Count < 1)
-            {
-                sbNotes.AppendLine("It seems that you have no stats recording. Please review the help page to learn how to setup stats.");
-                sbNotes.AppendLine();
-            }
             if (_statter != null && _statter.DarqUIDetected)
             {
                 sbNotes.AppendLine("Overcapped stats are shown as thicker line segments in the graph. Only stats from DarqUI can report overcap status.");
