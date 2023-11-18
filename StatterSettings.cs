@@ -16,6 +16,7 @@ namespace ActStatter
         private string _settingsFile = null;
 
         public bool ParseOnImport = false;
+        public bool RestrictToChannels = false;
         public bool GraphShowAverage = false;
         public bool GraphShowEncDps = false;
         public bool GraphShowEncHps = false;
@@ -26,8 +27,27 @@ namespace ActStatter
         public int PopupLastH = 0;
         public string LastPlayers = "";
         public string LastStat = "";
+        public List<string> RestrictedChannels = new List<string>();
 
         public List<StatterStat> Stats = new List<StatterStat>();
+
+        public static List<string> GetListFromString(string input, bool toLower = true)
+        {
+            var delimiters = new string[] { " ", ",", ":", "\t", Environment.NewLine };
+            var tempList = new List<string>(input.Split(delimiters, StringSplitOptions.RemoveEmptyEntries));
+            var retVal = tempList;
+            if (toLower)
+            {
+                retVal = new List<string>();
+                tempList.ForEach(item => retVal.Add(item.ToLower()));
+            }
+            return retVal;
+        }
+
+        public static string GetStringFromList(List<string> input)
+        {
+            return string.Join(", ", input);
+        }
 
         public StatterSettings()
         {
@@ -47,6 +67,7 @@ namespace ActStatter
             XmlNode rootNode = doc.SelectSingleNode("Settings");
 
             ParseOnImport = RetrieveSetting<bool>(rootNode, "ParseOnImport", true);
+            RestrictToChannels = RetrieveSetting<bool>(rootNode, "RestrictToChannels", false);
             GraphShowAverage = RetrieveSetting<bool>(rootNode, "GraphShowAverage", false);
             GraphShowEncDps = RetrieveSetting<bool>(rootNode, "GraphShowEncDps", false);
             GraphShowEncHps = RetrieveSetting<bool>(rootNode, "GraphShowEncHps", false);
@@ -61,6 +82,7 @@ namespace ActStatter
 
             LastPlayers = RetrieveSetting<string>(rootNode, "LastPlayers", "");
             LastStat = RetrieveSetting<string>(rootNode, "LastStat", "");
+            RestrictedChannels = GetListFromString(RetrieveSetting<string>(rootNode, "RestrictedChannels", ""));
 
             LoadStats(rootNode.SelectSingleNode("Stats"));
         }
@@ -76,6 +98,7 @@ namespace ActStatter
             doc.AppendChild(rootNode);
 
             AttachChildNode(rootNode, "ParseOnImport", ParseOnImport.ToString());
+            AttachChildNode(rootNode, "RestrictToChannels", RestrictToChannels.ToString());
             AttachChildNode(rootNode, "GraphShowAverage", GraphShowAverage.ToString());
             AttachChildNode(rootNode, "GraphShowEncDps", GraphShowEncDps.ToString());
             AttachChildNode(rootNode, "GraphShowEncHps", GraphShowEncHps.ToString());
@@ -86,6 +109,7 @@ namespace ActStatter
             AttachChildNode(rootNode, "PopupLastY", PopupLastY.ToString());
             AttachChildNode(rootNode, "LastPlayers", LastPlayers);
             AttachChildNode(rootNode, "LastStat", LastStat);
+            AttachChildNode(rootNode, "RestrictedChannels", GetStringFromList(RestrictedChannels));
 
             XmlElement statsNode = AttachChildNode(rootNode, "Stats", null);
             SaveStats(statsNode);
@@ -98,6 +122,7 @@ namespace ActStatter
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("Settings:");
             sb.AppendLine("  ParseOnImport = " + ParseOnImport);
+            sb.AppendLine("  RestrictToChannels = " + RestrictToChannels);
             sb.AppendLine("  GraphShowAverage = " + GraphShowAverage);
             sb.AppendLine("  GraphShowEncDps = " + GraphShowEncDps);
             sb.AppendLine("  GraphShowEncHps = " + GraphShowEncHps);
@@ -108,6 +133,7 @@ namespace ActStatter
             sb.AppendLine("  PopupLastY = " + PopupLastY.ToString());
             sb.AppendLine("  LastPlayers = " + LastPlayers);
             sb.AppendLine("  LastStat = " + LastStat);
+            sb.AppendLine("  RestrictedChannels = " + GetStringFromList(RestrictedChannels));
             List<string> _trackedStats = new List<string>();
             foreach (StatterStat stat in Stats)
             {

@@ -60,11 +60,11 @@ namespace ActStatter.Model
         }
 
         // Add a reading from DarqUI's StatMon logging.
-        public void AddDarqReading(string logLine, DateTime detectedTime, string player)
+        public void AddDarqReading(string statName, string statVal, string statOc, DateTime detectedTime, string player)
         {
             try
             {
-                var reading = ParseDarqReading(logLine, detectedTime, player);
+                var reading = ParseDarqReading(statName, statVal, statOc, detectedTime, player);
                 _readings.Add(reading);
             }
             catch { }
@@ -101,43 +101,30 @@ namespace ActStatter.Model
             return reading;
         }
 
-        private StatterStatReading ParseDarqReading(string logReading, DateTime logTime, string player)
+        private StatterStatReading ParseDarqReading(string statName, string statVal, string statOc, DateTime logTime, string player)
         {
             EnsureLocaleForDoubleParsing();
 
-            double temp;
-            // Format is like: DarqUI_StatMon:Fervor:1,344.1%:OC:#68A462
-            string[] parts = logReading.Split(new string[] { ":" }, StringSplitOptions.None);
-            StatterStatReading reading = null;
-            if (parts.Length >= 3)
+            string cleanedVal = statVal.Replace("%", "").Replace(",", "");
+            double parsedVal = 0;
+            double.TryParse(cleanedVal, out parsedVal);
+
+            var stat = StatterStat.GetStatForKey(statName);
+            if (stat.Key == "CurrentHealth")
             {
-                var stat = StatterStat.GetStatForKey(parts[1]);
-                reading = new StatterStatReading(StatterStatReading.StatSource.Darq)
-                {
-                    Stat = stat,
-                    Time = logTime,
-                    Player = player
-                };
-
-                string cleaned = parts[2].Replace("%", "").Replace(",", "");
-                if (double.TryParse(cleaned, out temp))
-                    reading.Value = temp;
-
-                if (parts.Length >= 4)
-                    reading.Overcap = parts[3] == "OC";
-
-                if (parts.Length >= 5)
-                    stat.Colour = ColorTranslator.FromHtml(parts[4]);
-
-                if (stat.Key == "CurrentHealth")
-                {
-                    Int64 restored = Convert.ToInt64(temp);
-                    restored &= 0xFFFFFFFF;
-                    reading.Value = Convert.ToDouble(restored);
-                    reading.Overcap = false; // Override this since it doesn't make sense to be OC
-                }
+                Int64 restored = Convert.ToInt64(parsedVal);
+                restored &= 0xFFFFFFFF;
+                parsedVal = Convert.ToDouble(restored);
             }
 
+            StatterStatReading reading = new StatterStatReading(StatterStatReading.StatSource.Darq)
+            {
+                Stat = stat,
+                Time = logTime,
+                Player = player,
+                Value = parsedVal,
+                Overcap = statOc == "OC"
+            };
             return reading;
         }
 
