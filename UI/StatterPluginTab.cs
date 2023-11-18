@@ -55,6 +55,10 @@ namespace ActStatter.UI
         private void StatterUI_Load(object sender, EventArgs e)
         {
             chkParseOnImport.Checked = _settings.ParseOnImport;
+            chkRestrictChannels.Checked = _settings.RestrictToChannels;
+            txtRestrictChannels.Text = StatterSettings.GetStringFromList(_settings.RestrictedChannels);
+            txtRestrictChannels.Enabled = chkRestrictChannels.Checked;
+
             SetSelectedStats();
 
             _loading = false;
@@ -142,6 +146,27 @@ namespace ActStatter.UI
             {
                 _settings.Save();
             }
+        }
+
+        private void chkRestrictChannel_CheckedChanged(object sender, EventArgs e)
+        {
+            _settings.RestrictToChannels = chkRestrictChannels.Checked;
+            if (!_loading)
+            {
+                _settings.Save();
+            }
+
+            txtRestrictChannels.Enabled = chkRestrictChannels.Checked;
+        }
+
+        private void txtRestrictChannels_Leave(object sender, EventArgs e)
+        {
+            _settings.RestrictedChannels = StatterSettings.GetListFromString(txtRestrictChannels.Text);
+            if (!_loading)
+            {
+                _settings.Save();
+            }
+            txtRestrictChannels.Text = StatterSettings.GetStringFromList(_settings.RestrictedChannels);
         }
 
         private void tabExtra_SelectedIndexChanged(object sender, EventArgs e)

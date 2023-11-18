@@ -276,11 +276,18 @@ namespace ActStatter.UI
             _end = encounterData.EndTime;
             _title = string.Format("{0} - {1}", encounterData.ZoneName, encounterData.Title);
 
-            // Load the player drop-down
+            // Load the player drop-down. Ensure that the player is actually part of this encounter,
+            // since they may be outputting log lines from another channel/guild.
+            List<string> encounterAllies = new List<string>();
+            foreach (var item in encounterData.GetAllies())
+                if (!encounterAllies.Contains(item.Name))
+                    encounterAllies.Add(item.Name);
             List<string> players = new List<string>();
             foreach (var reading in readings)
-                if (reading.Player != StatterStatReading.DEFAULT_PLAYER_NAME && !players.Contains(reading.Player))
-                    players.Add(reading.Player);
+                if (reading.Player != StatterStatReading.DEFAULT_PLAYER_NAME && 
+                    !players.Contains(reading.Player) &&
+                    encounterAllies.Contains(reading.Player))
+                        players.Add(reading.Player);
             players.Sort();
             players.Insert(0, StatterStatReading.DEFAULT_PLAYER_NAME);
 

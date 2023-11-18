@@ -265,9 +265,6 @@ namespace ActStatter
         // The main parsing logic lives here
         private bool HandleStatRead(LogLineEventArgs logInfo)
         {
-            // Return an indication of whether we handled the parse
-            bool parsed = true;
-
             // Extract the actual text of the log line
             string logLine = logInfo.logLine;
             string marker = "] ";
@@ -303,25 +300,50 @@ namespace ActStatter
                     Log("Receiving stats from Darq");
                 _usingDarqUI = true;
 
+                string[] parts = logLine.Split(new string[] { " ", ":" }, StringSplitOptions.RemoveEmptyEntries);
                 var player = StatterStatReading.DEFAULT_PLAYER_NAME;
+                var channel = "";
+                var statName = "";
+                var statVal = "";
+                var statOc = "";
                 if (logLine.StartsWith(@"\aPC"))
                 {
-                    string[] parts = logLine.Split(new string[] { " ", ":" }, StringSplitOptions.RemoveEmptyEntries);
+                    // eg. \aPC -1 Player:Player\/a tells ChannelName (14), "DarqUI_StatMon:Fervor:1,639.9%:OC:#68A462"
                     if (parts.Length >= 3)
-                    {
                         player = parts[2];
-                    }
+                    if (parts.Length >= 6)
+                        channel = parts[5].ToLower();
+                    if (parts.Length >= 9)
+                        statName = parts[8];
+                    if (parts.Length >= 10)
+                        statVal = parts[9];
+                    if (parts.Length >= 11)
+                        statOc = parts[10];
                 }
-                marker = ", \"";
-                markerPos = logLine.IndexOf(marker);
-                if (markerPos >= 0)
+                else
                 {
-                    logLine = logLine.Substring(markerPos + marker.Length).TrimEnd('"');
-                    _statCollection.AddDarqReading(logLine, logInfo.detectedTime, player);
+                    // eg. You tell channelname (14), "DarqUI_StatMon:Fervor:1,558.4%:OC"
+                    if (parts.Length >= 3)
+                        channel = parts[2].ToLower();
+                    if (parts.Length >= 6)
+                        statName = parts[5];
+                    if (parts.Length >= 7)
+                        statVal = parts[6];
+                    if (parts.Length >= 8)
+                        statOc = parts[7];
+                }
+
+                // Check if we need to restrict by channel, and if we have all we need
+                if ((!_settings.RestrictToChannels || _settings.RestrictedChannels.Contains(channel)) &&
+                    !string.IsNullOrEmpty(statName) &&
+                    !string.IsNullOrEmpty(statVal) &&
+                    !string.IsNullOrEmpty(statOc))
+                {
+                    _statCollection.AddDarqReading(statName, statVal, statOc, logInfo.detectedTime, player);
                 }
             }
 
-            return parsed;
+            return true;
         }
 
         // This is called each time ACT detects a new log line
