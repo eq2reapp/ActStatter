@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
+using Advanced_Combat_Tracker;
 
 namespace ActStatter.Model
 {
@@ -19,6 +19,11 @@ namespace ActStatter.Model
         public void StartStatGroup()
         {
             _statGroupIndex = 0;
+        }
+
+        public void Clear()
+        {
+            _readings.Clear();
         }
 
         public List<StatterStatReading> GetReadings(DateTime start, DateTime end)
@@ -60,11 +65,11 @@ namespace ActStatter.Model
         }
 
         // Add a reading from DarqUI's StatMon logging.
-        public void AddDarqReading(string statName, string statVal, string statOc, DateTime detectedTime, string player)
+        public void AddDarqReading(string statName, string statVal, string statOc, DateTime detectedTime, string playerKey)
         {
             try
             {
-                var reading = ParseDarqReading(statName, statVal, statOc, detectedTime, player);
+                var reading = ParseDarqReading(statName, statVal, statOc, detectedTime, playerKey);
                 _readings.Add(reading);
             }
             catch { }
@@ -77,7 +82,9 @@ namespace ActStatter.Model
             StatterStatReading reading = new StatterStatReading(StatterStatReading.StatSource.Native)
             {
                 Stat = stat,
-                Time = logTime
+                Time = logTime,
+                Player = ActGlobals.charName,
+                FirstPerson = true
             };
 
             double temp;
@@ -101,7 +108,7 @@ namespace ActStatter.Model
             return reading;
         }
 
-        private StatterStatReading ParseDarqReading(string statName, string statVal, string statOc, DateTime logTime, string player)
+        private StatterStatReading ParseDarqReading(string statName, string statVal, string statOc, DateTime logTime, string playerKey)
         {
             EnsureLocaleForDoubleParsing();
 
@@ -117,13 +124,15 @@ namespace ActStatter.Model
                 parsedVal = Convert.ToDouble(restored);
             }
 
+            bool isFirstPerson = StatterStatReading.IsFirstPersonKey(playerKey);
             StatterStatReading reading = new StatterStatReading(StatterStatReading.StatSource.Darq)
             {
                 Stat = stat,
                 Time = logTime,
-                Player = player,
+                Player = isFirstPerson ? ActGlobals.charName : playerKey,
                 Value = parsedVal,
-                Overcap = statOc == "OC"
+                Overcap = statOc == "OC",
+                FirstPerson = isFirstPerson
             };
             return reading;
         }

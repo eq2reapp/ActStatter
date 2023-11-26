@@ -31,6 +31,7 @@ namespace ActStatter
         public const string DYNAMICDATA_NOT_FOUND = "DynamicData not found";
         public const string DYNAMICDATA_COMMAND_PREFIX = "dynamicdata Stats.";
 
+        public const string ACTFORM_CLEAR_BUTTON_NAME = "btnClear";
         public const string ACTFORM_ENCOUNTER_TREEVIEW_NAME = "tvDG";
         public const string ACTFORM_ENCOUNTER_TREEVIEW_VALID_ENCOUNTER_TAG = "EncounterData";
         public const string ACTFORM_ENCOUNTER_TREEVIEW_MENU_OPTION = "View Encounter Stats";
@@ -50,6 +51,7 @@ namespace ActStatter
         private Label _pluginStatusText = null;
 
         // Keep references to some elements from the main ACT form
+        private Button _oFrmMainClearButton = null;
         private TreeView _oFrmMainEncounterTree = null;
         private ListView _oFrmMainAttackList = null;
         private ContextMenuStrip _menuEncounter = null;
@@ -208,6 +210,16 @@ namespace ActStatter
             ActGlobals.oFormActMain.OnLogLineRead -= oFormActMain_OnLogLineRead;
             ActGlobals.oFormActMain.OnLogLineRead += oFormActMain_OnLogLineRead;
 
+            // Get a reference to the clear button, and attach a command to 
+            // clear our accumulated data
+            _oFrmMainClearButton = FindControl(ActGlobals.oFormActMain, ACTFORM_CLEAR_BUTTON_NAME) as Button;
+            if (_oFrmMainClearButton != null)
+            {
+                _oFrmMainClearButton.Click -= btnClear_Click;
+                _oFrmMainClearButton.Click += btnClear_Click;
+                Log("Attached to button");
+            }
+
             // Get a reference to the left-side encounter treeview, and attach a command to 
             // the right-click context menu to view stats during each encounter
             _oFrmMainEncounterTree = FindControl(ActGlobals.oFormActMain, ACTFORM_ENCOUNTER_TREEVIEW_NAME) as TreeView;
@@ -231,6 +243,12 @@ namespace ActStatter
         private void DettachFromActForm()
         {
             ActGlobals.oFormActMain.OnLogLineRead -= oFormActMain_OnLogLineRead;
+
+            if (_oFrmMainClearButton != null)
+            {
+                _oFrmMainClearButton.Click -= btnClear_Click;
+                Log("Detached from button");
+            }
 
             if (_menuEncounter != null)
             {
@@ -300,8 +318,8 @@ namespace ActStatter
                     Log("Receiving stats from Darq");
                 _usingDarqUI = true;
 
-                string[] parts = logLine.Split(new string[] { " ", ":" }, StringSplitOptions.RemoveEmptyEntries);
-                var player = StatterStatReading.DEFAULT_PLAYER_NAME;
+                string[] parts = logLine.Split(new string[] { " ", ":", "\"" }, StringSplitOptions.RemoveEmptyEntries);
+                var playerKey = StatterStatReading.DEFAULT_PLAYER_KEY;
                 var channel = "";
                 var statName = "";
                 var statVal = "";
@@ -310,7 +328,7 @@ namespace ActStatter
                 {
                     // eg. \aPC -1 Player:Player\/a tells ChannelName (14), "DarqUI_StatMon:Fervor:1,639.9%:OC:#68A462"
                     if (parts.Length >= 3)
-                        player = parts[2];
+                        playerKey = parts[2];
                     if (parts.Length >= 6)
                         channel = parts[5].ToLower();
                     if (parts.Length >= 9)
@@ -339,7 +357,7 @@ namespace ActStatter
                     !string.IsNullOrEmpty(statVal) &&
                     !string.IsNullOrEmpty(statOc))
                 {
-                    _statCollection.AddDarqReading(statName, statVal, statOc, logInfo.detectedTime, player);
+                    _statCollection.AddDarqReading(statName, statVal, statOc, logInfo.detectedTime, playerKey);
                 }
             }
 
@@ -369,6 +387,11 @@ namespace ActStatter
 
             // Now complete the init
             AttachToActForm();
+        }
+
+        private void btnClear_Click(object sender, EventArgs e)
+        {
+            _statCollection.Clear();
         }
 
         // Enable or disable the option to view encounter stats based

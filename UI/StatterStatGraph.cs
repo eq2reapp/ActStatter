@@ -182,18 +182,18 @@ namespace ActStatter.UI
             if (_bAvgFill != null) _bAvgFill.Dispose();
         }
 
-        private List<string> GetStatPlayers()
+        private List<string> GetStatPlayerKeys()
         {
-            List<string> players = new List<string>();
+            List<string> playerKeys = new List<string>();
             foreach (var stat in _stats)
-                if (!players.Contains(stat.Player))
-                    players.Add(stat.Player);
-            if (players.Contains(StatterStatReading.DEFAULT_PLAYER_NAME))
+                if (!playerKeys.Contains(stat.PlayerKey))
+                    playerKeys.Add(stat.PlayerKey);
+            if (playerKeys.Contains(StatterStatReading.DEFAULT_PLAYER_KEY))
             {
-                players.Remove(StatterStatReading.DEFAULT_PLAYER_NAME);
-                players.Insert(0, StatterStatReading.DEFAULT_PLAYER_NAME);
+                playerKeys.Remove(StatterStatReading.DEFAULT_PLAYER_KEY);
+                playerKeys.Insert(0, StatterStatReading.DEFAULT_PLAYER_KEY);
             }
-            return players;
+            return playerKeys;
         }
 
         private Color ChangeColorBrightness(Color color, float correctionFactor)
@@ -404,13 +404,13 @@ namespace ActStatter.UI
                 g.DrawString($"Period: {_settings.EncDpsResolution}s", this.Font, _bLabels, GraphLeft + ((GraphRight - GraphLeft) / 2), GraphBottom + 8, _sfMidNear);
 
                 // Draw a legend
-                List<string> players = GetStatPlayers();
+                List<string> playerKeys = GetStatPlayerKeys();
                 int yLast = LegendTop;
-                foreach (var player in players)
+                foreach (var playerKey in playerKeys)
                 {
-                    using (var pen = new Pen(_statPlayerLineColourMap[player], 2))
+                    using (var pen = new Pen(_statPlayerLineColourMap[playerKey], 2))
                         g.DrawLine(pen, LegendLeft, yLast, LegendLeft + 15, yLast);
-                    g.DrawString(player, this.Font, _bLabels, LegendLeft + 20, yLast, _sfNearMid);
+                    g.DrawString(playerKey, this.Font, _bLabels, LegendLeft + 20, yLast, _sfNearMid);
                     yLast += 20;
                 }
 
@@ -516,7 +516,7 @@ namespace ActStatter.UI
                         shadowLines.Add(ShiftLines(ocLines, 2, 2), shadowLineOpts);
                         shadowLines.Add(ShiftLines(nonOcLines, 2, 2), shadowLineOpts);
                         shadowLines.Add(ShiftLines(verticalLines, 2, 2), shadowLineOpts);
-                        Color measurementLineColour = _statPlayerLineColourMap[encStat.Player];
+                        Color measurementLineColour = _statPlayerLineColourMap[encStat.PlayerKey];
                         measurementLines.Add(StretchLines(ocLines, 1, 0), new LineOptions() { Color = measurementLineColour, Width = LINE_OC_WIDTH });
                         measurementLines.Add(ShiftLines(nonOcLines, 0, 0), new LineOptions() { Color = measurementLineColour, Width = LINE_NON_OC_WIDTH });
                         measurementLines.Add(ShiftLines(verticalLines, 0, 0), new LineOptions() { Color = measurementLineColour, Width = LINE_NON_OC_WIDTH });
@@ -714,11 +714,9 @@ namespace ActStatter.UI
             _playersEncHps.Clear();
             _maxHps = 0;
             if (_stats.Count > 0 && (_settings.GraphShowEncDps || _settings.GraphShowEncHps))
-                foreach (var player in GetStatPlayers())
+                foreach (var playerKey in GetStatPlayerKeys())
                 {
-                    var playerName = player;
-                    if (playerName.Equals(StatterStatReading.DEFAULT_PLAYER_NAME))
-                        playerName = ActGlobals.charName;
+                    var playerName = playerKey.Equals(StatterStatReading.DEFAULT_PLAYER_KEY) ? encData.CharName : playerKey;
 
                     // To generate the dps/hps graph, just sum up the damage done each second
                     // over the duration of the enncounter. Then pass back over and accumulate
@@ -768,24 +766,24 @@ namespace ActStatter.UI
                                 encHps.Add(i, valPerSec);
                             }
                         }
-                        _playersEncDps.Add(player, encDps);
-                        _playersEncHps.Add(player, encHps);
+                        _playersEncDps.Add(playerKey, encDps);
+                        _playersEncHps.Add(playerKey, encHps);
                     }
                 }
 
             // Assign colours to the stat players. "You" should always exclusively use the same (first) colour
             _statPlayerLineColourMap.Clear();
-            stats.Sort((x, y) => x.Player.CompareTo(y.Player));
+            stats.Sort((x, y) => x.PlayerKey.CompareTo(y.PlayerKey));
             stats.ForEach(stat =>
             {
-                if (stat.Player.Equals(StatterStatReading.DEFAULT_PLAYER_NAME))
-                    _statPlayerLineColourMap.Add(stat.Player, _statLineColours[0]);
+                if (StatterStatReading.IsFirstPersonKey(stat.PlayerKey))
+                    _statPlayerLineColourMap.Add(stat.PlayerKey, _statLineColours[0]);
             });
             int defaultPlayerOffset = _statPlayerLineColourMap.Count;
             stats.ForEach(stat =>
             {
-                if (!stat.Player.Equals(StatterStatReading.DEFAULT_PLAYER_NAME))
-                    _statPlayerLineColourMap.Add(stat.Player, _statLineColours[1 + (_statPlayerLineColourMap.Count - defaultPlayerOffset)]);
+                if (!StatterStatReading.IsFirstPersonKey(stat.PlayerKey))
+                    _statPlayerLineColourMap.Add(stat.PlayerKey, _statLineColours[1 + (_statPlayerLineColourMap.Count - defaultPlayerOffset)]);
             });
 
             UpdateGraph();

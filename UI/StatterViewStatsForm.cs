@@ -19,7 +19,7 @@ namespace ActStatter.UI
 
         private List<StatterEncounterStat> _stats = new List<StatterEncounterStat>();
         private List<StatterEncounterStat> _selectedStats = new List<StatterEncounterStat>();
-        private List<string> _selectedPlayers = new List<string>();
+        private List<string> _selectedPlayerKeys = new List<string>();
         private bool _maskStatSelection = false;
         private DateTime _start = DateTime.MinValue;
         private DateTime _end = DateTime.MinValue;
@@ -120,7 +120,7 @@ namespace ActStatter.UI
         {
             List<StatterStatReading> readings = new List<StatterStatReading>();
             Random r = new Random((int)DateTime.Now.Ticks);
-            string[] players = { StatterStatReading.DEFAULT_PLAYER_NAME, "Yoda", "Luke", "Leia", "Han", "Chewy", "Bill", "Ted", "Optimus", "Reapp" };
+            string[] players = { "Yoda", "Luke", "Leia", "Han", "Chewy", "Bill", "Ted", "Optimus", "Reapp" };
             string[] stats = { "Crit_Bonus", "Fervor", "Potency", "AbilityDoubleAttack", "Resolve" };
             int[] statMin = { 30000, 1100, 1100000, 550, 9400 };
             int[] statMax = { 41000, 2100, 1400000, 650, 9400 };
@@ -140,35 +140,44 @@ namespace ActStatter.UI
                             Stat = statObj,
                             Overcap = r.Next(0, 9) >= 7,
                             Time = lastTime,
-                            Value = statMin[j] + (r.NextDouble() * (statMax[j] - statMin[j]))
+                            Value = statMin[j] + (r.NextDouble() * (statMax[j] - statMin[j])),
+                            FirstPerson = player.Equals("Yoda")
                         });
                         lastTime = lastTime.AddSeconds(r.Next(1, 10));
                     }
                 }
             });
-            ShowStats(readings, _encData);
+            ShowStats(readings, _encData, false);
         }
 
         private void lbPlayers_MouseUp(object sender, MouseEventArgs e)
         {
             var initialStat = _settings.LastStat;
 
-            List<string> selectedPlayers = new List<string>();
+            List<string> selectedPlayerKeys = new List<string>();
             for (int i = 0; i < lbPlayers.CheckedItems.Count; i++)
-                selectedPlayers.Add(lbPlayers.CheckedItems[i].ToString());
+            {
+                // If the first person char, use the condensed StatterStatReading.DEFAULT_PLAYER_NAME
+                var playerLabel = lbPlayers.CheckedItems[i].ToString();
+                var playerKey = playerLabel;
+                if (StatterStatReading.IsFirstPersonLabel(playerLabel))
+                    playerKey = StatterStatReading.DEFAULT_PLAYER_KEY;
+
+                selectedPlayerKeys.Add(playerKey);
+            }
 
             // Only update if the players have changed - we need this because there's
             // no event on the control itself to indicate this.
-            if (string.Join(":", selectedPlayers) != string.Join(":", _selectedPlayers))
+            if (string.Join(":", selectedPlayerKeys) != string.Join(":", _selectedPlayerKeys))
             {
                 ClearSelectedStats();
 
                 // Keep track of these players for next time the listbox has a click
-                _selectedPlayers = selectedPlayers;
-                _settings.LastPlayers = String.Join(", ", _selectedPlayers);
+                _selectedPlayerKeys = selectedPlayerKeys;
+                _settings.LastPlayers = String.Join(", ", _selectedPlayerKeys);
                 _settings.Save();
 
-                ShowTableStatsForPlayers(selectedPlayers);
+                ShowTableStatsForPlayerKeys(selectedPlayerKeys);
                 if (!string.IsNullOrEmpty(initialStat))
                     SelectAllOfStat(initialStat);
                 UpdateGraph();
@@ -266,7 +275,7 @@ namespace ActStatter.UI
          * Show the window with all the provided readings, and meta data. A list of
          * players will be created from the readings
          */
-        public void ShowStats(List<StatterStatReading> readings, EncounterData encounterData)
+        public void ShowStats(List<StatterStatReading> readings, EncounterData encounterData, bool restrictToEncounter = true)
         {
             this.Show();
 
@@ -282,63 +291,69 @@ namespace ActStatter.UI
             foreach (var item in encounterData.GetAllies())
                 if (!encounterAllies.Contains(item.Name))
                     encounterAllies.Add(item.Name);
-            List<string> players = new List<string>();
+            List<string> playerKeys = new List<string>();
+            StatterStatReading firstPersonPlayerReading = null;
             foreach (var reading in readings)
-                if (reading.Player != StatterStatReading.DEFAULT_PLAYER_NAME && 
-                    !players.Contains(reading.Player) &&
-                    encounterAllies.Contains(reading.Player))
-                        players.Add(reading.Player);
-            players.Sort();
-            players.Insert(0, StatterStatReading.DEFAULT_PLAYER_NAME);
+            {
+                // Build the list of allies in the encounter
+                if (!reading.FirstPerson &&
+                    !playerKeys.Contains(reading.Player) &&
+                    (!restrictToEncounter || encounterAllies.Contains(reading.Player)))
+                        playerKeys.Add(reading.Player);
 
-            _selectedPlayers.Clear();
-            var lastSelectedPlayers = new List<string>(_settings.LastPlayers.Split(new string[] { ", " }, StringSplitOptions.RemoveEmptyEntries));
+                // Attempt to find the first person character
+                if (firstPersonPlayerReading == null && reading.FirstPerson)
+                    firstPersonPlayerReading = reading;
+            }
+            playerKeys.Sort();
+            if (firstPersonPlayerReading != null)
+                playerKeys.Insert(0, StatterStatReading.DEFAULT_PLAYER_KEY);
+
+            // Determine the list of selected players (if previously saved)
+            _selectedPlayerKeys.Clear();
+            var lastSelectedPlayerKeys = new List<string>(_settings.LastPlayers.Split(new string[] { ", " }, StringSplitOptions.RemoveEmptyEntries));
             lbPlayers.BeginUpdate();
             lbPlayers.Items.Clear();
-            players.ForEach(player =>
+            playerKeys.ForEach(playerKey =>
             {
-                int index = lbPlayers.Items.Add(player);
-                if (lastSelectedPlayers.Contains(player))
+                var playerLabel = StatterStatReading.IsFirstPersonKey(playerKey) ? firstPersonPlayerReading.GetPlayerLabel() : playerKey;
+                int index = lbPlayers.Items.Add(playerLabel);
+                if (lastSelectedPlayerKeys.Contains(playerKey))
                 {
                     lbPlayers.SetItemChecked(index, true);
-                    _selectedPlayers.Add(player);
+                    _selectedPlayerKeys.Add(playerKey);
                 }
             });
             lbPlayers.EndUpdate();
-            if (lbPlayers.CheckedItems.Count < 1)
-            {
-                lbPlayers.SetItemChecked(0, true);
-                _selectedPlayers.Add(StatterStatReading.DEFAULT_PLAYER_NAME);
-            }
 
             // Calculate then show min/max etc for each stat for the initial selected player
             var initialStat = _settings.LastStat;
-            ShowTableStatsForPlayers(_selectedPlayers);
+            ShowTableStatsForPlayerKeys(_selectedPlayerKeys);
             if (!string.IsNullOrEmpty(initialStat))
                 SelectAllOfStat(initialStat);
             UpdateGraph();
         }
 
-        public void ShowTableStatsForPlayers(List<string> players)
+        public void ShowTableStatsForPlayerKeys(List<string> playerKeys)
         {
             // Group all the readings by their stat and player
             _stats.Clear();
-            foreach (string player in players)
+            foreach (string playerKey in playerKeys)
             {
-                var playerReadings = _readings.FindAll(reading => player == reading.Player);
+                var playerReadings = _readings.FindAll(reading => reading.GetPlayerKey().Equals(playerKey));
                 if (_statter != null)
-                    _statter.Log(string.Format("Showing {0} stat reading(s) for {1}", playerReadings.Count, player));
+                    _statter.Log(string.Format("Showing {0} stat reading(s) for {1}", playerReadings.Count, playerKey));
 
                 foreach (StatterStatReading reading in playerReadings)
                 {
                     // Compare by name so that multiple stat collecters can aggregate readings
-                    var encPlayerStat = _stats.Find(x => x.Stat.Name == reading.Stat.Name && x.Player == player);
+                    var encPlayerStat = _stats.Find(x => x.Stat.Name == reading.Stat.Name && x.PlayerKey == playerKey);
                     if (encPlayerStat == null)
                     {
                         encPlayerStat = new StatterEncounterStat()
                         {
                             Stat = reading.Stat,
-                            Player = player,
+                            PlayerKey = playerKey,
                             Readings = new List<StatterStatReading>(),
                             AvgReading = new StatterStatReading(),
                             PercentOvercap = new StatterStatReading()
@@ -441,7 +456,7 @@ namespace ActStatter.UI
                 {
                     List<object> values = new List<object>() {
                         stat.Stat.Name.Equals(lastStat) ? "" : stat.Stat.Name,
-                        stat.Player,
+                        stat.PlayerKey,
                         stat.MinReading == null ? "" : Formatters.GetReadableNumber(stat.MinReading.Value),
                         stat.MaxReading == null ? "" : Formatters.GetReadableNumber(stat.MaxReading.Value),
                         stat.AvgReading == null ? "" : Formatters.GetReadableNumber(stat.AvgReading.Value),
@@ -494,19 +509,19 @@ namespace ActStatter.UI
 
             // Now step through all rows looking for the stat, and select those rows
             bool foundFirstStatRow = false;
-            List<string> playerNames = new List<string>();
+            List<string> playerKeys = new List<string>();
             for (int i = 0; i < dgStats.Rows.Count; i++)
             {
                 var curRow = dgStats.Rows[i];
                 var curStatName = curRow.Cells[0].Value.ToString();
-                var curPlayerName = curRow.Cells[1].Value.ToString();
+                var curPlayerKey = curRow.Cells[1].Value.ToString();
                 if (!foundFirstStatRow)
                 {
                     if (curStatName.Equals(statName))
                     {
                         curRow.Selected = true;
                         foundFirstStatRow = true;
-                        playerNames.Add(curPlayerName);
+                        playerKeys.Add(curPlayerKey);
                     }
                 }
                 else
@@ -514,17 +529,17 @@ namespace ActStatter.UI
                     if (string.IsNullOrEmpty(curStatName))
                     {
                         curRow.Selected = true;
-                        playerNames.Add(curPlayerName);
+                        playerKeys.Add(curPlayerKey);
                     }
                     else
                         break;
                 }
             }
 
-            // Select all the stat/player combos for whose rows were selected
+            // Select all the stat/player combos for which rows were selected
             _selectedStats.Clear();
-            playerNames.ForEach(playerName => _selectedStats.Add(_stats.Find(
-                stat => stat.Stat.Name.Equals(statName) && stat.Player.Equals(playerName))));
+            playerKeys.ForEach(playerKey => _selectedStats.Add(_stats.Find(
+                stat => stat.Stat.Name.Equals(statName) && stat.PlayerKey.Equals(playerKey))));
 
             _settings.LastStat = statName;
             _settings.Save();
