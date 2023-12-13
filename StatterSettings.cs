@@ -22,16 +22,20 @@ namespace ActStatter
                 if (_settingsFile != null)
                 {
                     filename = _settingsFile;
-                    foreach (Match match in Regex.Matches(_settingsFile, @"^C:\\Users\\[^\\]+\\AppData\\Roaming\\(.+)$", RegexOptions.IgnoreCase))
-                        if (match.Groups.Count >= 2)
-                        {
-                            var group = match.Groups[1];
-                            if (group.Captures.Count > 0)
+                    try
+                    {
+                        foreach (Match match in Regex.Matches(_settingsFile, @"^C:\\Users\\[^\\]+\\AppData\\Roaming\\(.+)$", RegexOptions.IgnoreCase))
+                            if (match.Groups.Count >= 2)
                             {
-                                var path = group.Captures[0].ToString();
-                                filename = $"%AppData%\\{path}";
+                                var group = match.Groups[1];
+                                if (group.Captures.Count > 0)
+                                {
+                                    var path = group.Captures[0].ToString();
+                                    filename = $"%AppData%\\{path}";
+                                }
                             }
-                        }
+                    }
+                    catch { }
                 }
 
                 return filename;
