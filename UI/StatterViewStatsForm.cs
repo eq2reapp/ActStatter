@@ -65,7 +65,7 @@ namespace ActStatter.UI
                 _settings.PopupLastY = this.Bounds.Y;
                 _settings.PopupLastW = this.Bounds.Width;
                 _settings.PopupLastH = this.Bounds.Height;
-                _settings.Save();
+                _settings.Save(_statter);
             }
         }
 
@@ -175,7 +175,7 @@ namespace ActStatter.UI
                 // Keep track of these players for next time the listbox has a click
                 _selectedPlayerKeys = selectedPlayerKeys;
                 _settings.LastPlayers = String.Join(", ", _selectedPlayerKeys);
-                _settings.Save();
+                _settings.Save(_statter);
 
                 ShowTableStatsForPlayerKeys(selectedPlayerKeys);
                 if (!string.IsNullOrEmpty(initialStat))
@@ -233,7 +233,7 @@ namespace ActStatter.UI
         private void chkShowAverage_CheckedChanged(object sender, EventArgs e)
         {
             _settings.GraphShowAverage = chkShowAverage.Checked;
-            _settings.Save();
+            _settings.Save(_statter);
 
             UpdateGraph();
         }
@@ -253,7 +253,7 @@ namespace ActStatter.UI
                     _settings.GraphShowEncHps = true;
                     break;
             }
-            _settings.Save();
+            _settings.Save(_statter);
 
             UpdateGraph();
         }
@@ -261,7 +261,7 @@ namespace ActStatter.UI
         private void sliderEncDpsResolution_Scroll(object sender, EventArgs e)
         {
             _settings.EncDpsResolution = sliderEncDpsResolution.Value;
-            _settings.Save();
+            _settings.Save(_statter);
 
             UpdateGraph();
         }
@@ -542,7 +542,7 @@ namespace ActStatter.UI
                 stat => stat.Stat.Name.Equals(statName) && stat.PlayerKey.Equals(playerKey))));
 
             _settings.LastStat = statName;
-            _settings.Save();
+            _settings.Save(_statter);
 
             _maskStatSelection = false;
         }

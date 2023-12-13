@@ -8,12 +8,35 @@ using System.Xml;
 using Advanced_Combat_Tracker;
 using ActStatter.Model;
 using ActStatter.UI;
+using System.Text.RegularExpressions;
 
 namespace ActStatter
 {
     public class StatterSettings
     {
         private string _settingsFile = null;
+        public string SettingsFile {
+            get
+            {
+                string filename = "Undefined";
+                if (_settingsFile != null)
+                {
+                    filename = _settingsFile;
+                    foreach (Match match in Regex.Matches(_settingsFile, @"^C:\\Users\\[^\\]+\\AppData\\Roaming\\(.+)$", RegexOptions.IgnoreCase))
+                        if (match.Groups.Count >= 2)
+                        {
+                            var group = match.Groups[1];
+                            if (group.Captures.Count > 0)
+                            {
+                                var path = group.Captures[0].ToString();
+                                filename = $"%AppData%\\{path}";
+                            }
+                        }
+                }
+
+                return filename;
+            }
+        }
 
         public bool ParseOnImport = false;
         public bool RestrictToChannels = false;
@@ -87,10 +110,8 @@ namespace ActStatter
             LoadStats(rootNode.SelectSingleNode("Stats"));
         }
 
-        public void Save()
+        public void Save(StatterMain statter)
         {
-            if (_settingsFile == null || !File.Exists(_settingsFile)) return;
-
             XmlDocument doc = new XmlDocument();
             doc.AppendChild(doc.CreateXmlDeclaration("1.0", null, null));
 
@@ -114,13 +135,26 @@ namespace ActStatter
             XmlElement statsNode = AttachChildNode(rootNode, "Stats", null);
             SaveStats(statsNode);
 
-            doc.Save(_settingsFile);
+            try
+            {
+                if (statter != null)
+                    statter.Log("Saved settings", true);
+                doc.Save(_settingsFile);
+            }
+            catch (Exception ex) {
+                if (statter != null)
+                {
+                    statter.Log("Unable to save to settings file: " + SettingsFile, true);
+                    statter.Log(ex.ToString());
+                }
+            }
         }
 
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("Settings:");
+            sb.AppendLine("  File = " + SettingsFile);
             sb.AppendLine("  ParseOnImport = " + ParseOnImport);
             sb.AppendLine("  RestrictToChannels = " + RestrictToChannels);
             sb.AppendLine("  GraphShowAverage = " + GraphShowAverage);

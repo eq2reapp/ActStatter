@@ -87,9 +87,11 @@ namespace ActStatter
             _statCollection = new StatterStatCollection(_settings);
         }
 
-        public void Log(string message)
+        public void Log(string message, bool immediate = false)
         {
             Logs.Add(string.Format("[{0}] {1}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), message));
+            if (immediate)
+                _ui.RefreshLogView();
         }
 
         public string[] GetLogs()
@@ -122,6 +124,7 @@ namespace ActStatter
                 _pluginScreenSpace.Controls.Add(_ui);
                 _pluginScreenSpace.Text = "Statter";
 
+                Log("Creating macro file");
                 CreateMacroFile();
 
                 // Add the stat read handler to the list of currently active handlers
@@ -143,6 +146,7 @@ namespace ActStatter
             }
             catch (Exception ex)
             {
+                Log("Error while initializing");
                 Log(ex.Message);
             }
         }

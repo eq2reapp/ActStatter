@@ -76,7 +76,7 @@ namespace ActStatter.UI
                 _settings.Stats.Add(newStat);
                 if (!_loading)
                 {
-                    _settings.Save();
+                    _settings.Save(_statter);
                 }
 
                 AddSelectedStat(newStat);
@@ -90,7 +90,7 @@ namespace ActStatter.UI
             _settings.Stats.Remove(statDetailPanel.Stat);
             if (!_loading)
             {
-                _settings.Save();
+                _settings.Save(_statter);
             }
 
             RemoveSelectedStat(statDetailPanel);
@@ -102,7 +102,7 @@ namespace ActStatter.UI
         {
             if (!_loading)
             {
-                _settings.Save();
+                _settings.Save(_statter);
             }
 
             OnSelectedStatsChanged();
@@ -116,6 +116,11 @@ namespace ActStatter.UI
                 AddSelectedStat(stat);
 
             btnAdd.Enabled = _settings.Stats.Count < MAX_SELECTABLE_STATS;
+        }
+
+        public void RefreshLogView()
+        {
+            txtLogs.Lines = _statter.GetLogs();
         }
 
         private void AddSelectedStat(StatterStat stat)
@@ -144,7 +149,7 @@ namespace ActStatter.UI
             _settings.ParseOnImport = chkParseOnImport.Checked;
             if (!_loading)
             {
-                _settings.Save();
+                _settings.Save(_statter);
             }
         }
 
@@ -153,7 +158,7 @@ namespace ActStatter.UI
             _settings.RestrictToChannels = chkRestrictChannels.Checked;
             if (!_loading)
             {
-                _settings.Save();
+                _settings.Save(_statter);
             }
 
             txtRestrictChannels.Enabled = chkRestrictChannels.Checked;
@@ -164,7 +169,7 @@ namespace ActStatter.UI
             _settings.RestrictedChannels = StatterSettings.GetListFromString(txtRestrictChannels.Text);
             if (!_loading)
             {
-                _settings.Save();
+                _settings.Save(_statter);
             }
             txtRestrictChannels.Text = StatterSettings.GetStringFromList(_settings.RestrictedChannels);
         }
@@ -187,7 +192,7 @@ namespace ActStatter.UI
 
         private void btnRefresh_Click(object sender, EventArgs e)
         {
-            txtLogs.Lines = _statter.GetLogs();
+            RefreshLogView();
         }
 
         private void btnClearLogs_Click(object sender, EventArgs e)
