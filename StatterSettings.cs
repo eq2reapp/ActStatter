@@ -105,7 +105,11 @@ namespace ActStatter
             PopupLastH = RetrieveSetting<int>(rootNode, "PopupLastH", minSize.Height);
             var curScreen = Screen.FromControl(ActGlobals.oFormActMain);
             PopupLastX = RetrieveSetting<int>(rootNode, "PopupLastX", (int)Math.Floor((curScreen.WorkingArea.Width - PopupLastW) / 2.0));
+            if (PopupLastX < 0)
+                PopupLastX = 0;
             PopupLastY = RetrieveSetting<int>(rootNode, "PopupLastY", (int)Math.Floor((curScreen.WorkingArea.Height - PopupLastH) / 2.0));
+            if (PopupLastY < 0)
+                PopupLastY = 0;
 
             LastPlayers = RetrieveSetting<string>(rootNode, "LastPlayers", "");
             LastStat = RetrieveSetting<string>(rootNode, "LastStat", "");
