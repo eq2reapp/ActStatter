@@ -117,11 +117,22 @@ namespace ActStatter.Model
             double.TryParse(cleanedVal, out parsedVal);
 
             var stat = StatterStat.GetStatForKey(statName);
-            if (stat.Key == "CurrentHealth")
+            switch (stat.Key)
             {
-                Int64 restored = Convert.ToInt64(parsedVal);
-                restored &= 0xFFFFFFFF;
-                parsedVal = Convert.ToDouble(restored);
+                case "CurrentHealth":
+                    Int64 restored = Convert.ToInt64(parsedVal);
+                    restored &= 0xFFFFFFFF;
+                    parsedVal = Convert.ToDouble(restored);
+                    break;
+                case "Damage_Reduction_Percentage_Arcane":
+                case "Damage_Reduction_Percentage_Elemental":
+                case "Damage_Reduction_Percentage_Noxious":
+                case "Damage_Reduction_Percentage_Physical":
+                    // Thanks Kam - these are presented like 625 (for 62.5%)
+                    parsedVal = Math.Max(0, parsedVal / 10.0);
+                    break;
+                default:
+                    break;
             }
 
             bool isFirstPerson = StatterStatReading.IsFirstPersonKey(playerKey);

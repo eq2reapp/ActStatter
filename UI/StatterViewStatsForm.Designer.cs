@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.pnlGraph = new System.Windows.Forms.Panel();
+            this.statGraph = new ActStatter.UI.StatterStatGraph();
             this.pnlGraphControls = new System.Windows.Forms.Panel();
             this.lblNotes = new System.Windows.Forms.Label();
             this.chkShowAverage = new System.Windows.Forms.CheckBox();
@@ -41,7 +42,6 @@
             this.btnCreateData = new System.Windows.Forms.Button();
             this.lbPlayers = new System.Windows.Forms.CheckedListBox();
             this.pnlExtraControls = new System.Windows.Forms.Panel();
-            this.statGraph = new ActStatter.UI.StatterStatGraph();
             this.dgStats = new ActStatter.UI.StatterFastDataGrid();
             this.ColStat = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Player = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -49,6 +49,8 @@
             this.ColMax = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Avg = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.OC = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.label1 = new System.Windows.Forms.Label();
+            this.cmbYAxis = new System.Windows.Forms.ComboBox();
             this.pnlGraph.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.sliderEncDpsResolution)).BeginInit();
             this.pnlExtraControls.SuspendLayout();
@@ -62,11 +64,20 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.pnlGraph.Controls.Add(this.statGraph);
             this.pnlGraph.Controls.Add(this.pnlGraphControls);
-            this.pnlGraph.Location = new System.Drawing.Point(347, 6);
+            this.pnlGraph.Location = new System.Drawing.Point(347, 22);
             this.pnlGraph.Name = "pnlGraph";
             this.pnlGraph.Padding = new System.Windows.Forms.Padding(5);
-            this.pnlGraph.Size = new System.Drawing.Size(637, 620);
+            this.pnlGraph.Size = new System.Drawing.Size(637, 604);
             this.pnlGraph.TabIndex = 2;
+            // 
+            // statGraph
+            // 
+            this.statGraph.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.statGraph.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.statGraph.Location = new System.Drawing.Point(5, 5);
+            this.statGraph.Name = "statGraph";
+            this.statGraph.Size = new System.Drawing.Size(627, 594);
+            this.statGraph.TabIndex = 1;
             // 
             // pnlGraphControls
             // 
@@ -88,7 +99,7 @@
             // chkShowAverage
             // 
             this.chkShowAverage.AutoSize = true;
-            this.chkShowAverage.Location = new System.Drawing.Point(4, 7);
+            this.chkShowAverage.Location = new System.Drawing.Point(513, 7);
             this.chkShowAverage.Name = "chkShowAverage";
             this.chkShowAverage.Size = new System.Drawing.Size(96, 17);
             this.chkShowAverage.TabIndex = 5;
@@ -100,7 +111,7 @@
             // 
             this.sliderEncDpsResolution.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.sliderEncDpsResolution.AutoSize = false;
-            this.sliderEncDpsResolution.Location = new System.Drawing.Point(244, 4);
+            this.sliderEncDpsResolution.Location = new System.Drawing.Point(133, 4);
             this.sliderEncDpsResolution.Minimum = 1;
             this.sliderEncDpsResolution.Name = "sliderEncDpsResolution";
             this.sliderEncDpsResolution.Size = new System.Drawing.Size(104, 30);
@@ -111,7 +122,7 @@
             // lblResolution
             // 
             this.lblResolution.AutoSize = true;
-            this.lblResolution.Location = new System.Drawing.Point(342, 8);
+            this.lblResolution.Location = new System.Drawing.Point(231, 8);
             this.lblResolution.Name = "lblResolution";
             this.lblResolution.Size = new System.Drawing.Size(116, 13);
             this.lblResolution.TabIndex = 7;
@@ -125,7 +136,7 @@
             "None",
             "DPS",
             "HPS"});
-            this.cmbShowValues.Location = new System.Drawing.Point(176, 5);
+            this.cmbShowValues.Location = new System.Drawing.Point(65, 5);
             this.cmbShowValues.Name = "cmbShowValues";
             this.cmbShowValues.Size = new System.Drawing.Size(70, 21);
             this.cmbShowValues.TabIndex = 9;
@@ -134,7 +145,7 @@
             // lblShowVals
             // 
             this.lblShowVals.AutoSize = true;
-            this.lblShowVals.Location = new System.Drawing.Point(115, 8);
+            this.lblShowVals.Location = new System.Drawing.Point(4, 8);
             this.lblShowVals.Name = "lblShowVals";
             this.lblShowVals.Size = new System.Drawing.Size(56, 13);
             this.lblShowVals.TabIndex = 10;
@@ -154,7 +165,7 @@
             // lblPlayer
             // 
             this.lblPlayer.AutoSize = true;
-            this.lblPlayer.Location = new System.Drawing.Point(5, 11);
+            this.lblPlayer.Location = new System.Drawing.Point(5, 8);
             this.lblPlayer.Name = "lblPlayer";
             this.lblPlayer.Size = new System.Drawing.Size(87, 13);
             this.lblPlayer.TabIndex = 13;
@@ -186,7 +197,6 @@
             // pnlExtraControls
             // 
             this.pnlExtraControls.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.pnlExtraControls.Controls.Add(this.chkShowAverage);
             this.pnlExtraControls.Controls.Add(this.lblResolution);
             this.pnlExtraControls.Controls.Add(this.cmbShowValues);
             this.pnlExtraControls.Controls.Add(this.lblShowVals);
@@ -195,15 +205,6 @@
             this.pnlExtraControls.Name = "pnlExtraControls";
             this.pnlExtraControls.Size = new System.Drawing.Size(466, 38);
             this.pnlExtraControls.TabIndex = 17;
-            // 
-            // statGraph
-            // 
-            this.statGraph.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.statGraph.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.statGraph.Location = new System.Drawing.Point(5, 5);
-            this.statGraph.Name = "statGraph";
-            this.statGraph.Size = new System.Drawing.Size(627, 610);
-            this.statGraph.TabIndex = 1;
             // 
             // dgStats
             // 
@@ -300,11 +301,36 @@
             this.OC.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             this.OC.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(351, 8);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(72, 13);
+            this.label1.TabIndex = 18;
+            this.label1.Text = "Start Y-axis at";
+            // 
+            // cmbYAxis
+            // 
+            this.cmbYAxis.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbYAxis.FormattingEnabled = true;
+            this.cmbYAxis.Items.AddRange(new object[] {
+            "0",
+            "Min Val"});
+            this.cmbYAxis.Location = new System.Drawing.Point(429, 4);
+            this.cmbYAxis.Name = "cmbYAxis";
+            this.cmbYAxis.Size = new System.Drawing.Size(58, 21);
+            this.cmbYAxis.TabIndex = 19;
+            this.cmbYAxis.SelectedIndexChanged += new System.EventHandler(this.cmbYAxis_SelectedIndexChanged);
+            // 
             // StatterViewStatsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(984, 661);
+            this.Controls.Add(this.chkShowAverage);
+            this.Controls.Add(this.cmbYAxis);
+            this.Controls.Add(this.label1);
             this.Controls.Add(this.pnlExtraControls);
             this.Controls.Add(this.lbPlayers);
             this.Controls.Add(this.btnCreateData);
@@ -358,5 +384,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn Avg;
         private System.Windows.Forms.DataGridViewTextBoxColumn OC;
         private System.Windows.Forms.Panel pnlExtraControls;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.ComboBox cmbYAxis;
     }
 }

@@ -91,6 +91,11 @@ namespace ActStatter.UI
                 Math.Min(sliderEncDpsResolution.Maximum, 
                          Math.Max(sliderEncDpsResolution.Minimum, _settings.EncDpsResolution));
 
+            if (cmbYAxis.Items.Contains(_settings.YMin))
+                cmbYAxis.SelectedItem = _settings.YMin;
+            else
+                cmbYAxis.SelectedIndex = 0;
+
             // Load the dynamic help text
             StringBuilder sbNotes = new StringBuilder();
             if (_statter != null && _statter.DarqUIDetected)
@@ -253,6 +258,14 @@ namespace ActStatter.UI
                     _settings.GraphShowEncHps = true;
                     break;
             }
+            _settings.Save(_statter);
+
+            UpdateGraph();
+        }
+
+        private void cmbYAxis_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            _settings.YMin = cmbYAxis.SelectedItem.ToString();
             _settings.Save(_statter);
 
             UpdateGraph();

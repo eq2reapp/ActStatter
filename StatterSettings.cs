@@ -54,6 +54,7 @@ namespace ActStatter
         public int PopupLastH = 0;
         public string LastPlayers = "";
         public string LastStat = "";
+        public string YMin = "";
         public List<string> RestrictedChannels = new List<string>();
 
         public List<StatterStat> Stats = new List<StatterStat>();
@@ -113,6 +114,7 @@ namespace ActStatter
 
             LastPlayers = RetrieveSetting<string>(rootNode, "LastPlayers", "");
             LastStat = RetrieveSetting<string>(rootNode, "LastStat", "");
+            YMin = RetrieveSetting<string>(rootNode, "YMin", "Min Val");
             RestrictedChannels = GetListFromString(RetrieveSetting<string>(rootNode, "RestrictedChannels", ""));
 
             LoadStats(rootNode.SelectSingleNode("Stats"));
@@ -138,6 +140,7 @@ namespace ActStatter
             AttachChildNode(rootNode, "PopupLastY", PopupLastY.ToString());
             AttachChildNode(rootNode, "LastPlayers", LastPlayers);
             AttachChildNode(rootNode, "LastStat", LastStat);
+            AttachChildNode(rootNode, "YMin", YMin);
             AttachChildNode(rootNode, "RestrictedChannels", GetStringFromList(RestrictedChannels));
 
             XmlElement statsNode = AttachChildNode(rootNode, "Stats", null);
@@ -175,6 +178,7 @@ namespace ActStatter
             sb.AppendLine("  PopupLastY = " + PopupLastY.ToString());
             sb.AppendLine("  LastPlayers = " + LastPlayers);
             sb.AppendLine("  LastStat = " + LastStat);
+            sb.AppendLine("  YMin = " + YMin);
             sb.AppendLine("  RestrictedChannels = " + GetStringFromList(RestrictedChannels));
             List<string> _trackedStats = new List<string>();
             foreach (StatterStat stat in Stats)

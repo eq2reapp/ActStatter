@@ -696,6 +696,9 @@ namespace ActStatter.UI
                     if (stat.MaxReading.Value > _maxVal) _maxVal = stat.MaxReading.Value;
                 }
             }
+            bool minIsZero = _settings.YMin.Equals("0");
+            if (minIsZero)
+                _minVal = 0;
             _minVal = _minVal == double.MaxValue ? 0 : _minVal;
             _maxVal = _maxVal == double.MinValue ? 0 : _maxVal;
             _valueSpread = _maxVal - _minVal;
