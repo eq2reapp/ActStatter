@@ -51,6 +51,7 @@
             this.OC = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.label1 = new System.Windows.Forms.Label();
             this.cmbYAxis = new System.Windows.Forms.ComboBox();
+            this.chkShowRange = new System.Windows.Forms.CheckBox();
             this.pnlGraph.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.sliderEncDpsResolution)).BeginInit();
             this.pnlExtraControls.SuspendLayout();
@@ -323,11 +324,23 @@
             this.cmbYAxis.TabIndex = 19;
             this.cmbYAxis.SelectedIndexChanged += new System.EventHandler(this.cmbYAxis_SelectedIndexChanged);
             // 
+            // chkShowRange
+            // 
+            this.chkShowRange.AutoSize = true;
+            this.chkShowRange.Location = new System.Drawing.Point(624, 6);
+            this.chkShowRange.Name = "chkShowRange";
+            this.chkShowRange.Size = new System.Drawing.Size(93, 17);
+            this.chkShowRange.TabIndex = 20;
+            this.chkShowRange.Text = "Show Ranges";
+            this.chkShowRange.UseVisualStyleBackColor = true;
+            this.chkShowRange.CheckedChanged += new System.EventHandler(this.chkShowRange_CheckedChanged);
+            // 
             // StatterViewStatsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(984, 661);
+            this.Controls.Add(this.chkShowRange);
             this.Controls.Add(this.chkShowAverage);
             this.Controls.Add(this.cmbYAxis);
             this.Controls.Add(this.label1);
@@ -386,5 +399,6 @@
         private System.Windows.Forms.Panel pnlExtraControls;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.ComboBox cmbYAxis;
+        private System.Windows.Forms.CheckBox chkShowRange;
     }
 }

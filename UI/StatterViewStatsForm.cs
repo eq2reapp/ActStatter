@@ -52,7 +52,8 @@ namespace ActStatter.UI
 
         private void StatterViewStatsForm_Shown(object sender, EventArgs e)
         {
-            this.SetBounds(_settings.PopupLastX, _settings.PopupLastY, _settings.PopupLastW, _settings.PopupLastH);
+            var parentBounds = ActGlobals.oFormActMain.Bounds;
+            this.SetBounds(parentBounds.X + 10, parentBounds.Y + 10, _settings.PopupLastW, _settings.PopupLastH);
         }
 
         private void StatterViewStatsForm_SizeOrLocationChanged(object sender, EventArgs e)
@@ -61,8 +62,6 @@ namespace ActStatter.UI
             // load will just save default values.
             if (_loaded)
             {
-                _settings.PopupLastX = this.Bounds.X;
-                _settings.PopupLastY = this.Bounds.Y;
                 _settings.PopupLastW = this.Bounds.Width;
                 _settings.PopupLastH = this.Bounds.Height;
                 _settings.Save(_statter);
@@ -73,6 +72,7 @@ namespace ActStatter.UI
         {
             // Load some initial values from settings
             chkShowAverage.Checked = _settings.GraphShowAverage;
+            chkShowRange.Checked = _settings.GraphShowRanges;
 
             cmbShowValues.Items.Clear();
             cmbShowValues.Items.AddRange(new string[] {
@@ -126,19 +126,22 @@ namespace ActStatter.UI
             List<StatterStatReading> readings = new List<StatterStatReading>();
             Random r = new Random((int)DateTime.Now.Ticks);
             string[] players = { "Yoda", "Luke", "Leia", "Han", "Chewy", "Bill", "Ted", "Optimus", "Reapp" };
-            string[] stats = { "Crit_Bonus", "Fervor", "Potency", "AbilityDoubleAttack", "Resolve" };
-            int[] statMin = { 30000, 1100, 1100000, 550, 9400 };
-            int[] statMax = { 41000, 2100, 1400000, 650, 9400 };
+            string[] stats = { "Crit_Bonus", "Fervor", "Potency", "AbilityDoubleAttack", "Resolve", "Primary_Damage_Range" };
+            int[] statMin = { 30000, 1100, 1100000, 550, 9400, 200000 };
+            int[] statMax = { 41000, 2100, 1400000, 650, 9400, 400000 };
             Array.ForEach(players, player =>
             {
                 for (int j = 0; j < stats.Length; j++)
                 {
                     var stat = stats[j];
                     var statObj = StatterStat.GetStatForKey(stat);
+                    if (stat.Equals("Primary_Damage_Range"))
+                        statObj.HasSecondary = true;
+
                     DateTime lastTime = _start;
                     while (lastTime < _end)
                     {
-                        readings.Add(new StatterStatReading()
+                        var reading = new StatterStatReading()
                         {
                             Player = player,
                             Source = StatterStatReading.StatSource.Darq,
@@ -147,7 +150,14 @@ namespace ActStatter.UI
                             Time = lastTime,
                             Value = statMin[j] + (r.NextDouble() * (statMax[j] - statMin[j])),
                             FirstPerson = player.Equals("Yoda")
-                        });
+                        };
+                        if (statObj.HasSecondary)
+                        {
+                            reading.SecondaryValue = reading.Value / 2;
+                            reading.Overcap = false;
+                        }
+
+                        readings.Add(reading);
                         lastTime = lastTime.AddSeconds(r.Next(1, 10));
                     }
                 }
@@ -157,8 +167,6 @@ namespace ActStatter.UI
 
         private void lbPlayers_MouseUp(object sender, MouseEventArgs e)
         {
-            var initialStat = _settings.LastStat;
-
             List<string> selectedPlayerKeys = new List<string>();
             for (int i = 0; i < lbPlayers.CheckedItems.Count; i++)
             {
@@ -182,10 +190,7 @@ namespace ActStatter.UI
                 _settings.LastPlayers = String.Join(", ", _selectedPlayerKeys);
                 _settings.Save(_statter);
 
-                ShowTableStatsForPlayerKeys(selectedPlayerKeys);
-                if (!string.IsNullOrEmpty(initialStat))
-                    SelectAllOfStat(initialStat);
-                UpdateGraph();
+                RefreshTableAndGraph();
             }
         }
 
@@ -243,6 +248,14 @@ namespace ActStatter.UI
             UpdateGraph();
         }
 
+        private void chkShowRange_CheckedChanged(object sender, EventArgs e)
+        {
+            _settings.GraphShowRanges = chkShowRange.Checked;
+            _settings.Save(_statter);
+
+            RefreshTableAndGraph();
+        }
+
         private void cmbShowValues_SelectedIndexChanged(object sender, EventArgs e)
         {
             _settings.GraphShowEncDps = false;
@@ -291,6 +304,13 @@ namespace ActStatter.UI
         public void ShowStats(List<StatterStatReading> readings, EncounterData encounterData, bool restrictToEncounter = true)
         {
             this.Show();
+            _statter.Log(string.Format("Opening graph window at {0}, {1} ({2} x {3}) on monitor {4}",
+                this.Location.X,
+                this.Location.Y,
+                this.Width,
+                this.Height,
+                Screen.FromControl(this).DeviceName
+            ));
 
             _readings = readings;
             _encData = encounterData;
@@ -340,11 +360,7 @@ namespace ActStatter.UI
             lbPlayers.EndUpdate();
 
             // Calculate then show min/max etc for each stat for the initial selected player
-            var initialStat = _settings.LastStat;
-            ShowTableStatsForPlayerKeys(_selectedPlayerKeys);
-            if (!string.IsNullOrEmpty(initialStat))
-                SelectAllOfStat(initialStat);
-            UpdateGraph();
+            RefreshTableAndGraph();
         }
 
         public void ShowTableStatsForPlayerKeys(List<string> playerKeys)
@@ -382,6 +398,7 @@ namespace ActStatter.UI
             double encounterDurationSeconds = (_end - _start).TotalSeconds;
             foreach (StatterEncounterStat encStat in _stats)
             {
+                bool hasSecondary = _settings.GraphShowRanges && encStat.Stat.HasSecondary;
                 if (encStat.Readings.Count > 0)
                 {
                     // Filter out any readings that occur more than once a second (take the latest)
@@ -397,31 +414,55 @@ namespace ActStatter.UI
 
                     StatterStatReading prevReading = null;
                     StatterStatReading curReading;
-                    double curDuration;
+                    double curDuration = 0;
+                    double curValue = 0;
                     double statSum = 0.0;
                     double ocTime = 0.0;
+                    double lowVal = double.MaxValue;
+                    double highVal = double.MinValue;
                     for (int i = 0; i < encStat.Readings.Count; i++)
                     {
                         curReading = encStat.Readings[i];
+                        curValue = hasSecondary ? (curReading.Value + curReading.SecondaryValue) / 2.0 : curReading.Value;
                         if (i == 0)
                         {
                             curDuration = curReading.Time.Subtract(_start).TotalSeconds;
-                            statSum += curDuration * curReading.Value;
+                            statSum += curDuration * curValue;
                         }
                         else
                         {
                             curDuration = curReading.Time.Subtract(prevReading.Time).TotalSeconds;
-                            statSum += curDuration * prevReading.Value;
+                            var prevValue = hasSecondary ? (prevReading.Value + prevReading.SecondaryValue) / 2.0 : prevReading.Value;
+                            statSum += curDuration * prevValue;
                         }
 
-                        if (encStat.MinReading == null || curReading.Value < encStat.MinReading.Value)
+                        if (curReading.Value < lowVal)
+                        {
                             encStat.MinReading = curReading;
-
-                        if (encStat.MaxReading == null || curReading.Value > encStat.MaxReading.Value)
+                            lowVal = curReading.Value;
+                        }
+                        if (curReading.Value > highVal)
+                        {
                             encStat.MaxReading = curReading;
+                            highVal = curReading.Value;
+                        }
 
                         if (curReading.Overcap)
                             ocTime += curDuration;
+
+                        if (hasSecondary)
+                        {
+                            if (curReading.SecondaryValue < lowVal)
+                            {
+                                encStat.MinReading = curReading;
+                                lowVal = curReading.SecondaryValue;
+                            }
+                            if (curReading.SecondaryValue > highVal)
+                            {
+                                encStat.MaxReading = curReading;
+                                highVal = curReading.SecondaryValue;
+                            }
+                        }
 
                         prevReading = curReading;
                     }
@@ -439,6 +480,15 @@ namespace ActStatter.UI
             ShowStatsTable();
             if (_selectedStats.Count < 1)
                 SelectDefaultStat();
+        }
+
+        private void RefreshTableAndGraph()
+        {
+            var initialStat = _settings.LastStat;
+            ShowTableStatsForPlayerKeys(_selectedPlayerKeys);
+            if (!string.IsNullOrEmpty(initialStat))
+                SelectAllOfStat(initialStat);
+            UpdateGraph();
         }
 
         private void ShowStatsTable()
@@ -467,11 +517,12 @@ namespace ActStatter.UI
                 string lastStat = "";
                 foreach (StatterEncounterStat stat in _stats)
                 {
+                    bool hasSecondary = _settings.GraphShowRanges && stat.Stat.HasSecondary;
                     List<object> values = new List<object>() {
                         stat.Stat.Name.Equals(lastStat) ? "" : stat.Stat.Name,
                         stat.PlayerKey,
-                        stat.MinReading == null ? "" : Formatters.GetReadableNumber(stat.MinReading.Value),
-                        stat.MaxReading == null ? "" : Formatters.GetReadableNumber(stat.MaxReading.Value),
+                        stat.MinReading == null ? "" : Formatters.GetReadableNumber(hasSecondary ? Math.Min(stat.MinReading.Value, stat.MinReading.SecondaryValue) : stat.MinReading.Value),
+                        stat.MaxReading == null ? "" : Formatters.GetReadableNumber(hasSecondary ? Math.Max(stat.MaxReading.Value, stat.MaxReading.SecondaryValue) : stat.MaxReading.Value),
                         stat.AvgReading == null ? "" : Formatters.GetReadableNumber(stat.AvgReading.Value),
                         stat.PercentOvercap == null ? "" : stat.PercentOvercap.Value.ToString("0") + "%"
                     };

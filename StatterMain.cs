@@ -9,6 +9,7 @@ using Advanced_Combat_Tracker;
 using ActStatter.UI;
 using ActStatter.Model;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace ActStatter
 {
@@ -107,13 +108,75 @@ namespace ActStatter
         // The entry-point from the ACT plugin engine, called when the plugin is loaded
         public void InitPlugin(TabPage pluginScreenSpace, Label pluginStatusText)
         {
+            _pluginScreenSpace = pluginScreenSpace;
+            _pluginStatusText = pluginStatusText;
+
             try
             {
+                var pluginData = ActGlobals.oFormActMain.PluginGetSelfData(this);
+                
                 Log("Initializing plugin");
-                Log("Version = " + GetType().Assembly.GetName().Version);
+                Log($"Version: {GetType().Assembly.GetName().Version}");
+                Log($"Plugin: {pluginData.pluginFile.FullName} ({File.GetLastWriteTime(pluginData.pluginFile.FullName)})");
+                Log($"OS: {Environment.OSVersion} ({(Environment.Is64BitProcess ? "64" : "32")}-bit)");
+                Log($"DotNet: {RuntimeInformation.FrameworkDescription}");
+                Log($"ACT: {Environment.CurrentDirectory} (v{ActGlobals.oFormActMain.GetVersion()})");
 
-                _pluginScreenSpace = pluginScreenSpace;
-                _pluginStatusText = pluginStatusText;
+                StringBuilder sbPlugins = new StringBuilder();
+                sbPlugins.AppendLine("Plugins:");
+                foreach (var plugin in ActGlobals.oFormActMain.ActPlugins)
+                {
+                    string pluginName = plugin.lblPluginTitle.Text;
+                    if (pluginName != "ActStatter.dll")
+                    {
+                        string version = "";
+                        var control = plugin.pluginObj as Control;
+                        if (control != null && control.ProductVersion != null)
+                            version = control.ProductVersion;
+                        if (String.IsNullOrEmpty(version))
+                        {
+                            control = plugin.pluginObj as UserControl;
+                            if (control != null && control.ProductVersion != null)
+                                version = control.ProductVersion;
+                        }
+                        if (String.IsNullOrEmpty(version))
+                        {
+                            try
+                            {
+                                var assembly = Assembly.LoadFrom(plugin.pluginFile.FullName);
+                                version = assembly.GetName().Version.ToString();
+                            }
+                            catch
+                            {
+                                // Read the file manually
+                                if (plugin.pluginFile.Extension.ToLower() != ".dll")
+                                    try
+                                    {
+                                        foreach (var line in File.ReadAllLines(plugin.pluginFile.FullName))
+                                            if (line.Trim().StartsWith("[assembly: AssemblyVersion"))
+                                            {
+                                                string[] parts = line.Split('"');
+                                                if (parts.Length >= 2 && Regex.IsMatch(parts[1].Trim(), @"\d+\.\d+"))
+                                                    version = parts[1].Trim();
+                                            }
+                                    }
+                                    catch { }
+                            }
+                        }
+                        sbPlugins.AppendLine($"  {plugin.lblPluginTitle.Text} (v{version})");
+                    }
+                }
+                Log(sbPlugins.ToString().Trim());
+
+                StringBuilder sbScreens = new StringBuilder();
+                sbScreens.AppendLine("Screens:");
+                int screenNum = 1;
+                foreach (var screen in Screen.AllScreens)
+                {
+                    sbScreens.AppendLine($"  {screenNum}: {screen.DeviceName}{(screen.Primary ? " (Primary)" : "")}: {screen.Bounds}");
+                    screenNum++;
+                }
+                Log(sbScreens.ToString().Trim());
 
                 _settings.Load();
                 Log(_settings.ToString());
@@ -322,37 +385,48 @@ namespace ActStatter
                     Log("Receiving stats from Darq");
                 _usingDarqUI = true;
 
-                string[] parts = logLine.Split(new string[] { " ", ":", "\"" }, StringSplitOptions.RemoveEmptyEntries);
-                var playerKey = StatterStatReading.DEFAULT_PLAYER_KEY;
-                var channel = "";
-                var statName = "";
-                var statVal = "";
-                var statOc = "";
+                // Extract the DarqUI and player data
+                string playerKey = StatterStatReading.DEFAULT_PLAYER_KEY;
+                string channel;
+                string darqData;
+                int start;
+                int end;
                 if (logLine.StartsWith(@"\aPC"))
                 {
                     // eg. \aPC -1 Player:Player\/a tells ChannelName (14), "DarqUI_StatMon:Fervor:1,639.9%:OC:#68A462"
-                    if (parts.Length >= 3)
-                        playerKey = parts[2];
-                    if (parts.Length >= 6)
-                        channel = parts[5].ToLower();
-                    if (parts.Length >= 9)
-                        statName = parts[8];
-                    if (parts.Length >= 10)
-                        statVal = parts[9];
-                    if (parts.Length >= 11)
-                        statOc = parts[10];
+                    start = 8;
+                    end = logLine.IndexOf(":");
+                    playerKey = logLine.Substring(start, end - start);
+
+                    start = logLine.IndexOf("tells ", end + 1);
+                    start += 6;
+                    end = logLine.IndexOf(" ", start + 1);
+                    channel = logLine.Substring(start, end - start);
                 }
                 else
                 {
                     // eg. You tell channelname (14), "DarqUI_StatMon:Fervor:1,558.4%:OC"
-                    if (parts.Length >= 3)
-                        channel = parts[2].ToLower();
-                    if (parts.Length >= 6)
-                        statName = parts[5];
-                    if (parts.Length >= 7)
-                        statVal = parts[6];
-                    if (parts.Length >= 8)
-                        statOc = parts[7];
+                    start = logLine.IndexOf("tell ");
+                    start += 5;
+                    end = logLine.IndexOf(" ", start + 1);
+                    channel = logLine.Substring(start, end - start);
+                }
+                start = logLine.IndexOf(",", end + 1);
+                start += 3;
+                end = logLine.Length - 1;
+                darqData = logLine.Substring(start, end - start);
+
+                // The Darq data looks like "DarqUI_StatMon:Fervor:1,558.4%:OC", and
+                // the value could be a range, eg.: 986,547,392 - 1,196,849,920
+                var statName = "";
+                var statVal = "";
+                var statOc = "";
+                string[] parts = darqData.Split(':');
+                if (parts.Length >= 4)
+                {
+                    statName = parts[1];
+                    statVal = parts[2];
+                    statOc = parts[3];
                 }
 
                 // Check if we need to restrict by channel, and if we have all we need

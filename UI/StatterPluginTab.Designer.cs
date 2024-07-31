@@ -31,6 +31,8 @@
             this.pnlMain = new System.Windows.Forms.Panel();
             this.grpStatterConfig = new System.Windows.Forms.GroupBox();
             this.grpGeneralOptions = new System.Windows.Forms.GroupBox();
+            this.txtRestrictChannels = new System.Windows.Forms.TextBox();
+            this.chkRestrictChannels = new System.Windows.Forms.CheckBox();
             this.chkParseOnImport = new System.Windows.Forms.CheckBox();
             this.pnlInstructionsContainer = new System.Windows.Forms.Panel();
             this.tabExtra = new System.Windows.Forms.TabControl();
@@ -45,8 +47,6 @@
             this.grpTrackedStats = new System.Windows.Forms.GroupBox();
             this.pnlStatDetails = new System.Windows.Forms.FlowLayoutPanel();
             this.btnAdd = new System.Windows.Forms.Button();
-            this.chkRestrictChannels = new System.Windows.Forms.CheckBox();
-            this.txtRestrictChannels = new System.Windows.Forms.TextBox();
             this.pnlMain.SuspendLayout();
             this.grpStatterConfig.SuspendLayout();
             this.grpGeneralOptions.SuspendLayout();
@@ -94,6 +94,27 @@
             this.grpGeneralOptions.TabIndex = 15;
             this.grpGeneralOptions.TabStop = false;
             this.grpGeneralOptions.Text = "Options";
+            // 
+            // txtRestrictChannels
+            // 
+            this.txtRestrictChannels.Location = new System.Drawing.Point(44, 66);
+            this.txtRestrictChannels.Multiline = true;
+            this.txtRestrictChannels.Name = "txtRestrictChannels";
+            this.txtRestrictChannels.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.txtRestrictChannels.Size = new System.Drawing.Size(265, 71);
+            this.txtRestrictChannels.TabIndex = 2;
+            this.txtRestrictChannels.Leave += new System.EventHandler(this.txtRestrictChannels_Leave);
+            // 
+            // chkRestrictChannels
+            // 
+            this.chkRestrictChannels.AutoSize = true;
+            this.chkRestrictChannels.Location = new System.Drawing.Point(24, 48);
+            this.chkRestrictChannels.Name = "chkRestrictChannels";
+            this.chkRestrictChannels.Size = new System.Drawing.Size(179, 17);
+            this.chkRestrictChannels.TabIndex = 1;
+            this.chkRestrictChannels.Text = "Only parse stats from channel(s):";
+            this.chkRestrictChannels.UseVisualStyleBackColor = true;
+            this.chkRestrictChannels.CheckedChanged += new System.EventHandler(this.chkRestrictChannel_CheckedChanged);
             // 
             // chkParseOnImport
             // 
@@ -259,27 +280,6 @@
             this.btnAdd.Text = "+";
             this.btnAdd.UseVisualStyleBackColor = true;
             this.btnAdd.Click += new System.EventHandler(this.btnAdd_Click);
-            // 
-            // chkRestrictChannels
-            // 
-            this.chkRestrictChannels.AutoSize = true;
-            this.chkRestrictChannels.Location = new System.Drawing.Point(24, 48);
-            this.chkRestrictChannels.Name = "chkRestrictChannels";
-            this.chkRestrictChannels.Size = new System.Drawing.Size(179, 17);
-            this.chkRestrictChannels.TabIndex = 1;
-            this.chkRestrictChannels.Text = "Only parse stats from channel(s):";
-            this.chkRestrictChannels.UseVisualStyleBackColor = true;
-            this.chkRestrictChannels.CheckedChanged += new System.EventHandler(this.chkRestrictChannel_CheckedChanged);
-            // 
-            // txtRestrictChannels
-            // 
-            this.txtRestrictChannels.Location = new System.Drawing.Point(44, 66);
-            this.txtRestrictChannels.Multiline = true;
-            this.txtRestrictChannels.Name = "txtRestrictChannels";
-            this.txtRestrictChannels.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtRestrictChannels.Size = new System.Drawing.Size(265, 71);
-            this.txtRestrictChannels.TabIndex = 2;
-            this.txtRestrictChannels.Leave += new System.EventHandler(this.txtRestrictChannels_Leave);
             // 
             // StatterPluginTab
             // 
