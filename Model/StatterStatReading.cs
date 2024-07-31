@@ -15,6 +15,7 @@ namespace ActStatter.Model
         public StatterStat Stat { get; set; }
         public DateTime Time { get; set; }
         public double Value { get; set; }
+        public double SecondaryValue { get; set; }
         public bool Overcap { get; set; }
         public string Player { get; set; }
         public bool FirstPerson { get; set; }

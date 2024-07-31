@@ -14,6 +14,7 @@ namespace ActStatter.Model
         public string Name { get { return _name; } }
         public string Key { get { return _key; } }
         public Color Colour { get; set; }
+        public bool HasSecondary { get; set; }
 
         // Trackable stats are pulled from <EQ2_Dir>\UI\Default\eq2ui_gamedata.xml
         // Search for: <DataSource description="Stats" Name="Stats">
@@ -76,16 +77,16 @@ namespace ActStatter.Model
             { "Power", "Power Mit" },
             { "Power_Regen", "Power Regen" },
             { "PowerRange", "Max Mana" },
-            { "Primary_Damage_Range", "Primary Range" },
+            { "Primary_Damage_Range", "Primary Dmg" },
             { "Primary_Delay", "Primary Delay" },
             { "PvP_Critical_Mitigation", "PvP Crit Mit" },
             { "PVPSpellDoubleAttack", "PvP Doublecast" },
-            { "Ranged_Damage_Range", "Ranged Range" },
+            { "Ranged_Damage_Range", "Ranged Dmg" },
             { "Ranged_Delay", "Ranged Delay" },
             { "Ranged_Double_Atk_Percent", "Ranged Doublecast" },
             { "Resolve", "Resolve" },
             { "Run_Speed", "Run Speed" },
-            { "Secondary_Damage_Range", "Secondary Range" },
+            { "Secondary_Damage_Range", "Secondary Dmg" },
             { "Secondary_Delay", "Secondary Delay" },
             { "Shield_Effectiveness", "Block %" },
             { "Spell_Cast_Percent", "Casting Speed" },
@@ -103,7 +104,7 @@ namespace ActStatter.Model
         };
         private static Dictionary<string, StatterStat> _cachedStats = new Dictionary<string, StatterStat>();
 
-        public StatterStat(string name)
+        public StatterStat(string name) : base()
         {
             _name = name;
             _key = GetKeyForStatName(name);

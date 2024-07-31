@@ -18,6 +18,10 @@ namespace ActStatter.UI
             public float Width;
             public int Alpha = 255;
         }
+        private class AreaOptions
+        {
+            public Color Color;
+        }
         private class GraphPin
         {
             public Point Point;
@@ -75,6 +79,7 @@ namespace ActStatter.UI
         // Bounds for the graph drawing area
         private bool ShowingDps { get { return _settings.GraphShowEncDps && _playersEncDps.Count > 0; } }
         private bool ShowingHps { get { return _settings.GraphShowEncHps && _playersEncHps.Count > 0; } }
+        private bool ShowingRanges { get { return _settings.GraphShowRanges; } }
         private double DpsAreaRatio = 0.33;
         private int GraphWidth { get { return this.Width - MARGIN_DATA_X_LEFT - MARGIN_DATA_X_RIGHT; } }
         private int GraphHeight { get { return this.Height - MARGIN_DATA_Y_TOP - MARGIN_DATA_Y_BOTTOM; } }
@@ -351,192 +356,251 @@ namespace ActStatter.UI
         {
             if (this.Width < 1 || this.Height < 1) return;
 
-            Bitmap buff = new Bitmap(this.Width, this.Height);
-            using (Graphics g = Graphics.FromImage(buff))
+            try
             {
-                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
-                g.Clear(SystemColors.Window);
-
-                // Draw the grids
-                int spacing = 20;
-                for (int x = DataLeft + spacing; x < DataRight; x += spacing)
-                    g.DrawLine(_pTicks, x, DataTop, x, DataBottom);
-                for (int y = DataTop + spacing; y < DataBottom; y += spacing)
-                    g.DrawLine(_pTicks, DataLeft, y, DataRight, y);
-                g.DrawLine(_pOutline, DataLeft - 4, DataTop, DataRight, DataTop);
-                g.DrawLine(_pOutline, DataLeft - 4, DataBottom, DataRight, DataBottom);
-                g.DrawLine(_pOutline, DataLeft, DataTop, DataLeft, DataBottom + 4);
-                g.DrawLine(_pOutline, DataRight, DataTop, DataRight, DataBottom + 4);
-                g.DrawString(Formatters.GetReadableNumber(_maxVal), this.Font, _bLabels, DataLeft - 8, DataTop + 3, _sfFarMid);
-                g.DrawString(Formatters.GetReadableNumber(_minVal), this.Font, _bLabels, DataLeft - 8, DataBottom - 3, _sfFarMid);
-
-                if (ShowingDps || ShowingHps)
+                Bitmap buff = new Bitmap(this.Width, this.Height);
+                using (Graphics g = Graphics.FromImage(buff))
                 {
-                    for (int x = DpsLeft + spacing; x < DpsRight; x += spacing)
-                        g.DrawLine(_pTicks, x, DpsTop, x, DpsBottom);
-                    for (int y = DpsTop + spacing; y < DpsBottom; y += spacing)
-                        g.DrawLine(_pTicks, DpsLeft, y, DpsRight, y);
-                    g.DrawLine(_pOutline, DpsLeft - 4, DpsTop, DpsRight, DpsTop);
-                    g.DrawLine(_pOutline, DpsLeft - 4, DpsBottom, DpsRight, DpsBottom);
-                    g.DrawLine(_pOutline, DpsLeft, DpsTop, DpsLeft, DpsBottom + 4);
-                    g.DrawLine(_pOutline, DpsRight, DpsTop, DpsRight, DpsBottom + 4);
+                    g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+                    g.Clear(SystemColors.Window);
 
-                    string label = "Label";
-                    double maxVal = 0;
-                    if (ShowingDps)
+                    // Draw the grids
+                    int spacing = 20;
+                    for (int x = DataLeft + spacing; x < DataRight; x += spacing)
+                        g.DrawLine(_pTicks, x, DataTop, x, DataBottom);
+                    for (int y = DataTop + spacing; y < DataBottom; y += spacing)
+                        g.DrawLine(_pTicks, DataLeft, y, DataRight, y);
+                    g.DrawLine(_pOutline, DataLeft - 4, DataTop, DataRight, DataTop);
+                    g.DrawLine(_pOutline, DataLeft - 4, DataBottom, DataRight, DataBottom);
+                    g.DrawLine(_pOutline, DataLeft, DataTop, DataLeft, DataBottom + 4);
+                    g.DrawLine(_pOutline, DataRight, DataTop, DataRight, DataBottom + 4);
+                    g.DrawString(Formatters.GetReadableNumber(_maxVal), this.Font, _bLabels, DataLeft - 8, DataTop + 3, _sfFarMid);
+                    g.DrawString(Formatters.GetReadableNumber(_minVal), this.Font, _bLabels, DataLeft - 8, DataBottom - 3, _sfFarMid);
+
+                    if (ShowingDps || ShowingHps)
                     {
-                        label = "EncDPS";
-                        maxVal = _maxDps;
-                    }
-                    else if (ShowingHps)
-                    {
-                        label = "EncHPS";
-                        maxVal = _maxHps;
-                    }
-                    g.DrawString(Formatters.GetReadableNumber(maxVal), this.Font, _bLabels, DpsLeft - 8, DpsTop + 3, _sfFarMid);
-                    g.DrawString(Formatters.GetReadableNumber(0), this.Font, _bLabels, DpsLeft - 8, DpsBottom - 3, _sfFarMid);
-                    g.DrawString(label, this.Font, _bLabels, DpsLeft - 8, DpsTop + (DpsHeight / 2), _sfFarMid);
-                }
+                        for (int x = DpsLeft + spacing; x < DpsRight; x += spacing)
+                            g.DrawLine(_pTicks, x, DpsTop, x, DpsBottom);
+                        for (int y = DpsTop + spacing; y < DpsBottom; y += spacing)
+                            g.DrawLine(_pTicks, DpsLeft, y, DpsRight, y);
+                        g.DrawLine(_pOutline, DpsLeft - 4, DpsTop, DpsRight, DpsTop);
+                        g.DrawLine(_pOutline, DpsLeft - 4, DpsBottom, DpsRight, DpsBottom);
+                        g.DrawLine(_pOutline, DpsLeft, DpsTop, DpsLeft, DpsBottom + 4);
+                        g.DrawLine(_pOutline, DpsRight, DpsTop, DpsRight, DpsBottom + 4);
 
-                // Draw the time labels
-                g.DrawString(_startTime.ToString("h':'mm':'ss"), this.Font, _bLabels, GraphLeft - 20, GraphBottom + 8, _sfNearNear);
-                g.DrawString(_endTime.ToString("h':'mm':'ss"), this.Font, _bLabels, GraphRight + 20, GraphBottom + 8, _sfFarNear);
-                g.DrawString($"Period: {_settings.EncDpsResolution}s", this.Font, _bLabels, GraphLeft + ((GraphRight - GraphLeft) / 2), GraphBottom + 8, _sfMidNear);
-
-                // Draw a legend
-                List<string> playerKeys = GetStatPlayerKeys();
-                int yLast = LegendTop;
-                foreach (var playerKey in playerKeys)
-                {
-                    using (var pen = new Pen(_statPlayerLineColourMap[playerKey], 2))
-                        g.DrawLine(pen, LegendLeft, yLast, LegendLeft + 15, yLast);
-                    g.DrawString(playerKey, this.Font, _bLabels, LegendLeft + 20, yLast, _sfNearMid);
-                    yLast += 20;
-                }
-
-                // Draw a box representing the average of the stat (note that this only applies
-                // when a single stat is being shown)
-                if (_settings.GraphShowAverage && _valueAverage >= 0)
-                {
-                    Point pTopLeft = GetDataPoint(_startTime, _valueAverage);
-                    Point pTopRight = GetDataPoint(_endTime, _valueAverage);
-                    g.FillRectangle(_bAvgFill, DataLeft, pTopLeft.Y, DataWidth, DataBottom - pTopLeft.Y);
-                    g.DrawLine(_pAvg, pTopLeft, pTopRight);
-                }
-
-                // Draw the encDps/encHps line
-                if (ShowingDps || ShowingHps)
-                {
-                    foreach (string player in _playersEncDps.Keys)
-                    {
-                        Dictionary<int, double> statPoints = new Dictionary<int, double>();
+                        string label = "Label";
                         double maxVal = 0;
-                        Color lineColour = Color.Black;
                         if (ShowingDps)
                         {
-                            statPoints = _playersEncDps[player];
+                            label = "EncDPS";
                             maxVal = _maxDps;
-                            lineColour = _statPlayerLineColourMap[player];
                         }
                         else if (ShowingHps)
                         {
-                            statPoints = _playersEncHps[player];
+                            label = "EncHPS";
                             maxVal = _maxHps;
-                            lineColour = _statPlayerLineColourMap[player];
                         }
-                        List<Tuple<Point, Point>> encLine = new List<Tuple<Point, Point>>();
-                        Point prevPoint = statPoints.Count > 0 ? GetEncValPoint(0, statPoints[0], maxVal) : GetEncValPoint(0, 0, maxVal);
-                        Point curPoint;
-                        foreach (int tTime in statPoints.Keys)
-                        {
-                            curPoint = GetEncValPoint(tTime, statPoints[tTime], maxVal);
-                            encLine.Add(new Tuple<Point, Point>(prevPoint, curPoint));
-                            prevPoint = curPoint;
-                        }
-                        // Add the last point
-                        curPoint = GetEncValPoint((int)Math.Floor(_totalSeconds), statPoints.Values.Last(), maxVal);
-                        encLine.Add(new Tuple<Point, Point>(prevPoint, curPoint));
-                        RenderLine(g, encLine, lineColour, 2f, 255);
+                        g.DrawString(Formatters.GetReadableNumber(maxVal), this.Font, _bLabels, DpsLeft - 8, DpsTop + 3, _sfFarMid);
+                        g.DrawString(Formatters.GetReadableNumber(0), this.Font, _bLabels, DpsLeft - 8, DpsBottom - 3, _sfFarMid);
+                        g.DrawString(label, this.Font, _bLabels, DpsLeft - 8, DpsTop + (DpsHeight / 2), _sfFarMid);
                     }
-                }
 
-                // Now render the actual stat value lines
-                Dictionary<List<Tuple<Point, Point>>, LineOptions> shadowLines = new Dictionary<List<Tuple<Point, Point>>, LineOptions>();
-                Dictionary<List<Tuple<Point, Point>>, LineOptions> measurementLines = new Dictionary<List<Tuple<Point, Point>>, LineOptions>();
-                LineOptions shadowLineOpts = new LineOptions() { Color = LINE_SHADOW_COLOUR, Width = LINE_SHADOW_WIDTH, Alpha = LINE_SHADOW_ALPHA };
-                for (int i = 0; i < _stats.Count; i++)
-                    if (_stats[i].Readings.Count > 0)
+                    // Draw the time labels
+                    g.DrawString(_startTime.ToString("h':'mm':'ss"), this.Font, _bLabels, GraphLeft - 20, GraphBottom + 8, _sfNearNear);
+                    g.DrawString(_endTime.ToString("h':'mm':'ss"), this.Font, _bLabels, GraphRight + 20, GraphBottom + 8, _sfFarNear);
+                    g.DrawString($"Period: {_settings.EncDpsResolution}s", this.Font, _bLabels, GraphLeft + ((GraphRight - GraphLeft) / 2), GraphBottom + 8, _sfMidNear);
+
+                    // Draw a legend
+                    List<string> playerKeys = GetStatPlayerKeys();
+                    int yLast = LegendTop;
+                    foreach (var playerKey in playerKeys)
                     {
-                        StatterEncounterStat encStat = _stats[i];
-                        var readings = encStat.Readings;
-                        StatterStatReading curReading;
-                        StatterStatReading prevReading;
-                        Point prevPoint;
-                        Point wayPoint;
-                        Point curPoint;
-                        List<Tuple<Point, Point>> verticalLines = new List<Tuple<Point, Point>>();
-                        List<Tuple<Point, Point>> nonOcLines = new List<Tuple<Point, Point>>();
-                        List<Tuple<Point, Point>> ocLines = new List<Tuple<Point, Point>>();
-
-                        // Iterate through the readings for this stat, and build collections
-                        // of points that we can use to draw lines for the stat graph. We'll
-                        // build each point and use the previous point to add the line points.
-                        prevReading = readings[0];
-                        for (int j = 0; j < readings.Count; j++)
-                        {
-                            // Since this stat can start after the fight T0, handle the first point specially
-                            if (j == 0)
-                                prevPoint = GetDataPoint(_startTime, prevReading.Value);
-                            else
-                                prevPoint = GetDataPoint(prevReading.Time, prevReading.Value);
-
-                            // Need a horizontal line from the last reading to the current time
-                            curReading = readings[j];
-                            wayPoint = GetDataPoint(curReading.Time, prevReading.Value);
-                            if (prevReading.Overcap)
-                                ocLines.Add(new Tuple<Point, Point>(prevPoint, wayPoint));
-                            else
-                                nonOcLines.Add(new Tuple<Point, Point>(prevPoint, wayPoint));
-
-                            // Now the vertical line
-                            curPoint = GetDataPoint(curReading.Time, curReading.Value);
-                            verticalLines.Add(new Tuple<Point, Point>(wayPoint, curPoint));
-
-                            prevReading = curReading;
-                        }
-                        // Add a final horizontal line to close out the duration, since it's unlikely the
-                        // reading occured at exactly the end of the encounter
-                        prevPoint = GetDataPoint(prevReading.Time, prevReading.Value);
-                        curPoint = GetDataPoint(_endTime, prevReading.Value);
-                        if (prevReading.Overcap)
-                            ocLines.Add(new Tuple<Point, Point>(prevPoint, curPoint));
-                        else
-                            nonOcLines.Add(new Tuple<Point, Point>(prevPoint, curPoint));
-
-                        shadowLines.Add(ShiftLines(ocLines, 2, 2), shadowLineOpts);
-                        shadowLines.Add(ShiftLines(nonOcLines, 2, 2), shadowLineOpts);
-                        shadowLines.Add(ShiftLines(verticalLines, 2, 2), shadowLineOpts);
-                        Color measurementLineColour = _statPlayerLineColourMap[encStat.PlayerKey];
-                        measurementLines.Add(StretchLines(ocLines, 1, 0), new LineOptions() { Color = measurementLineColour, Width = LINE_OC_WIDTH });
-                        measurementLines.Add(ShiftLines(nonOcLines, 0, 0), new LineOptions() { Color = measurementLineColour, Width = LINE_NON_OC_WIDTH });
-                        measurementLines.Add(ShiftLines(verticalLines, 0, 0), new LineOptions() { Color = measurementLineColour, Width = LINE_NON_OC_WIDTH });
-
-                        // Draw the stat label on the axis
-                        string statLabel = encStat.Stat.Name.Replace(" ", Environment.NewLine);
-                        g.DrawString(statLabel, this.Font, _bLabels, DataLeft - 8, DataTop + (DataHeight / 2), _sfFarMid);
+                        using (var pen = new Pen(GetPlayerColour(playerKey), 2))
+                            g.DrawLine(pen, LegendLeft, yLast, LegendLeft + 15, yLast);
+                        g.DrawString(playerKey, this.Font, _bLabels, LegendLeft + 20, yLast, _sfNearMid);
+                        yLast += 20;
                     }
 
-                RenderLines(g, measurementLines);
+                    // Draw a box representing the average of the stat (note that this only applies
+                    // when a single stat is being shown)
+                    if (_settings.GraphShowAverage && _valueAverage >= 0)
+                    {
+                        Point pTopLeft = GetDataPoint(_startTime, _valueAverage);
+                        Point pTopRight = GetDataPoint(_endTime, _valueAverage);
+                        g.FillRectangle(_bAvgFill, DataLeft, pTopLeft.Y, DataWidth, DataBottom - pTopLeft.Y);
+                        g.DrawLine(_pAvg, pTopLeft, pTopRight);
+                    }
 
-                // Render pins
-                foreach (var pin in _pins)
-                {
-                    g.DrawLine(_pCrosshair, DataLeft, pin.Point.Y, DataRight, pin.Point.Y);
-                    g.DrawString(pin.Label, this.Font, SystemBrushes.Highlight, DataRight + 5, pin.Point.Y, _sfNearMid);
+                    // Draw the encDps/encHps line
+                    if (ShowingDps || ShowingHps)
+                    {
+                        foreach (string player in _playersEncDps.Keys)
+                        {
+                            Dictionary<int, double> statPoints = new Dictionary<int, double>();
+                            double maxVal = 0;
+                            Color lineColour = Color.Black;
+                            if (ShowingDps)
+                            {
+                                statPoints = _playersEncDps[player];
+                                maxVal = _maxDps;
+                                lineColour = GetPlayerColour(player);
+                            }
+                            else if (ShowingHps)
+                            {
+                                statPoints = _playersEncHps[player];
+                                maxVal = _maxHps;
+                                lineColour = GetPlayerColour(player);
+                            }
+                            List<Tuple<Point, Point>> encLine = new List<Tuple<Point, Point>>();
+                            Point prevPoint = statPoints.Count > 0 ? GetEncValPoint(0, statPoints[0], maxVal) : GetEncValPoint(0, 0, maxVal);
+                            Point curPoint;
+                            foreach (int tTime in statPoints.Keys)
+                            {
+                                curPoint = GetEncValPoint(tTime, statPoints[tTime], maxVal);
+                                encLine.Add(new Tuple<Point, Point>(prevPoint, curPoint));
+                                prevPoint = curPoint;
+                            }
+                            // Add the last point
+                            curPoint = GetEncValPoint((int)Math.Floor(_totalSeconds), statPoints.Values.Last(), maxVal);
+                            encLine.Add(new Tuple<Point, Point>(prevPoint, curPoint));
+                            RenderLine(g, encLine, lineColour, 2f, 255);
+                        }
+                    }
+
+                    // Now render the actual stat value lines
+                    Dictionary<List<Tuple<Point, Point>>, LineOptions> shadowLines = new Dictionary<List<Tuple<Point, Point>>, LineOptions>();
+                    Dictionary<List<Tuple<Point, Point>>, LineOptions> measurementLines = new Dictionary<List<Tuple<Point, Point>>, LineOptions>();
+                    Dictionary<List<Tuple<Point, Point>>, AreaOptions> measurementAreas = new Dictionary<List<Tuple<Point, Point>>, AreaOptions>();
+                    LineOptions shadowLineOpts = new LineOptions() { Color = LINE_SHADOW_COLOUR, Width = LINE_SHADOW_WIDTH, Alpha = LINE_SHADOW_ALPHA };
+                    for (int i = 0; i < _stats.Count; i++)
+                        if (_stats[i].Readings.Count > 0)
+                        {
+                            StatterEncounterStat encStat = _stats[i];
+                            Color measurementLineColour = GetPlayerColour(encStat.PlayerKey);
+                            var readings = encStat.Readings;
+                            StatterStatReading curReading;
+                            StatterStatReading prevReading;
+                            Point prevPoint;
+                            Point wayPoint;
+                            Point curPoint;
+                            List<Tuple<Point, Point>> verticalLines = new List<Tuple<Point, Point>>();
+                            List<Tuple<Point, Point>> nonOcLines = new List<Tuple<Point, Point>>();
+                            List<Tuple<Point, Point>> ocLines = new List<Tuple<Point, Point>>();
+                            List<Tuple<Point, Point>> areas = new List<Tuple<Point, Point>>();
+
+                            // Iterate through the readings for this stat, and build collections
+                            // of points that we can use to draw lines for the stat graph. We'll
+                            // build each point and use the previous point to add the line points.
+                            prevReading = readings[0];
+                            for (int j = 0; j < readings.Count; j++)
+                            {
+                                curReading = readings[j];
+
+                                // Since this stat can start after the fight T0, handle the first point specially
+                                if (j == 0)
+                                    prevPoint = GetDataPoint(_startTime, prevReading.Value);
+                                else
+                                    prevPoint = GetDataPoint(prevReading.Time, prevReading.Value);
+
+                                // Need a horizontal line from the last reading to the current time
+                                wayPoint = GetDataPoint(curReading.Time, prevReading.Value);
+                                if (prevReading.Overcap)
+                                    ocLines.Add(new Tuple<Point, Point>(prevPoint, wayPoint));
+                                else
+                                    nonOcLines.Add(new Tuple<Point, Point>(prevPoint, wayPoint));
+
+                                // Now the vertical line
+                                curPoint = GetDataPoint(curReading.Time, curReading.Value);
+                                verticalLines.Add(new Tuple<Point, Point>(wayPoint, curPoint));
+
+                                // If the stat has a secondary value, do the same thing for a second line
+                                if (ShowingRanges && encStat.Stat.HasSecondary)
+                                {
+                                    if (j == 0)
+                                        prevPoint = GetDataPoint(_startTime, prevReading.SecondaryValue);
+                                    else
+                                        prevPoint = GetDataPoint(prevReading.Time, prevReading.SecondaryValue);
+
+                                    // Need a horizontal line from the last reading to the current time
+                                    wayPoint = GetDataPoint(curReading.Time, prevReading.SecondaryValue);
+                                    if (prevReading.Overcap)
+                                        ocLines.Add(new Tuple<Point, Point>(prevPoint, wayPoint));
+                                    else
+                                        nonOcLines.Add(new Tuple<Point, Point>(prevPoint, wayPoint));
+
+                                    // Now the vertical line
+                                    curPoint = GetDataPoint(curReading.Time, curReading.SecondaryValue);
+                                    verticalLines.Add(new Tuple<Point, Point>(wayPoint, curPoint));
+
+                                    if (j == 0)
+                                        prevPoint = GetDataPoint(_startTime, prevReading.SecondaryValue);
+                                    else
+                                        prevPoint = GetDataPoint(prevReading.Time, prevReading.SecondaryValue);
+
+                                    curPoint = GetDataPoint(curReading.Time, prevReading.Value);
+                                    areas.Add(new Tuple<Point, Point>(prevPoint, curPoint));
+                                }
+
+                                prevReading = curReading;
+                            }
+                            // Add a final horizontal line to close out the duration, since it's unlikely the
+                            // reading occured at exactly the end of the encounter
+                            prevPoint = GetDataPoint(prevReading.Time, prevReading.Value);
+                            curPoint = GetDataPoint(_endTime, prevReading.Value);
+                            if (prevReading.Overcap)
+                                ocLines.Add(new Tuple<Point, Point>(prevPoint, curPoint));
+                            else
+                                nonOcLines.Add(new Tuple<Point, Point>(prevPoint, curPoint));
+                            if (ShowingRanges && encStat.Stat.HasSecondary)
+                            {
+                                prevPoint = GetDataPoint(prevReading.Time, prevReading.SecondaryValue);
+                                curPoint = GetDataPoint(_endTime, prevReading.SecondaryValue);
+                                if (prevReading.Overcap)
+                                    ocLines.Add(new Tuple<Point, Point>(prevPoint, curPoint));
+                                else
+                                    nonOcLines.Add(new Tuple<Point, Point>(prevPoint, curPoint));
+
+                                curPoint = GetDataPoint(_endTime, prevReading.Value);
+                                areas.Add(new Tuple<Point, Point>(prevPoint, curPoint));
+                            }
+
+                            shadowLines.Add(ShiftLines(ocLines, 2, 2), shadowLineOpts);
+                            shadowLines.Add(ShiftLines(nonOcLines, 2, 2), shadowLineOpts);
+                            shadowLines.Add(ShiftLines(verticalLines, 2, 2), shadowLineOpts);
+                            measurementLines.Add(StretchLines(ocLines, 1, 0), new LineOptions() { Color = measurementLineColour, Width = LINE_OC_WIDTH });
+                            measurementLines.Add(ShiftLines(nonOcLines, 0, 0), new LineOptions() { Color = measurementLineColour, Width = LINE_NON_OC_WIDTH });
+                            measurementLines.Add(ShiftLines(verticalLines, 0, 0), new LineOptions() { Color = measurementLineColour, Width = LINE_NON_OC_WIDTH });
+
+                            measurementAreas.Add(areas, new AreaOptions() { Color = measurementLineColour });
+
+                            // Draw the stat label on the axis
+                            string statLabel = encStat.Stat.Name.Replace(" ", Environment.NewLine);
+                            g.DrawString(statLabel, this.Font, _bLabels, DataLeft - 8, DataTop + (DataHeight / 2), _sfFarMid);
+                        }
+
+                    RenderAreas(g, measurementAreas);
+                    RenderLines(g, measurementLines);
+
+                    // Render pins
+                    foreach (var pin in _pins)
+                    {
+                        g.DrawLine(_pCrosshair, DataLeft, pin.Point.Y, DataRight, pin.Point.Y);
+                        g.DrawString(pin.Label, this.Font, SystemBrushes.Highlight, DataRight + 5, pin.Point.Y, _sfNearMid);
+                    }
                 }
-            }
 
-            SwapBuff(buff);
+                SwapBuff(buff);
+            }
+            catch { }
+        }
+
+        private Color GetPlayerColour(string player)
+        {
+            Color colour = Color.Gray;
+            if (_statPlayerLineColourMap.ContainsKey(player) && _statPlayerLineColourMap[player] != null)
+                colour = _statPlayerLineColourMap[player];
+
+            return colour;
         }
 
         // Extract all points to an array, optionally shifting them by xOffset or yOffset
@@ -545,12 +609,10 @@ namespace ActStatter.UI
             List<Tuple<Point, Point>> newLines = new List<Tuple<Point, Point>>();
 
             foreach (var line in lines)
-            {
                 newLines.Add(new Tuple<Point, Point>(
                     new Point(line.Item1.X + xOffset, line.Item1.Y + yOffset),
                     new Point(line.Item2.X + xOffset, line.Item2.Y + yOffset)
                 ));
-            }
 
             return newLines;
         }
@@ -560,12 +622,10 @@ namespace ActStatter.UI
             List<Tuple<Point, Point>> newLines = new List<Tuple<Point, Point>>();
 
             foreach (var line in lines)
-            {
                 newLines.Add(new Tuple<Point, Point>(
                     new Point(line.Item1.X - xStretch, line.Item1.Y - yStretch),
                     new Point(line.Item2.X + xStretch, line.Item2.Y + yStretch)
                 ));
-            }
 
             return newLines;
         }
@@ -578,23 +638,17 @@ namespace ActStatter.UI
 
         private void RenderLine(Graphics g, List<Tuple<Point, Point>> lines, Color baseColour, float lineWidth, int alpha)
         {
-            using (Pen pLine = new Pen(ShiftAlpha(baseColour, alpha), lineWidth))
-            {
+            using (var pLine = new Pen(ShiftAlpha(baseColour, alpha), lineWidth))
                 foreach (var line in lines)
-                {
                     g.DrawLine(pLine, line.Item1, line.Item2);
-                }
-            }
         }
 
-        private void RenderPoints(Graphics g, Point[] points, Color baseColour, bool overcap)
+        private void RenderAreas(Graphics g, Dictionary<List<Tuple<Point, Point>>, AreaOptions> areas)
         {
-            using (SolidBrush bPoint = new SolidBrush(baseColour))
-            {
-                int pntSize = 4;
-                foreach (Point p in points)
-                    g.FillEllipse(bPoint, p.X - pntSize, p.Y - pntSize, pntSize * 2, pntSize * 2);
-            }
+            foreach (var areaList in areas.Keys)
+                using (var bFill = new SolidBrush(ShiftAlpha(areas[areaList].Color, 16)))
+                    foreach (Tuple<Point, Point> coords in areaList)
+                        g.FillRectangle(bFill, coords.Item1.X, coords.Item2.Y, coords.Item2.X - coords.Item1.X, coords.Item1.Y - coords.Item2.Y);
         }
 
         // Get a point inside the stat drawing area that corresponds to the given time and dps/hps value
@@ -671,6 +725,9 @@ namespace ActStatter.UI
 
         private Color ShiftAlpha(Color baseColour, int newAlpha)
         {
+            if (baseColour == null)
+                return Color.Gray;
+
             return Color.FromArgb(Math.Min(255, Math.Max(0, newAlpha)), baseColour.R, baseColour.G, baseColour.B);
         }
 
@@ -694,6 +751,12 @@ namespace ActStatter.UI
                 {
                     if (stat.MinReading.Value < _minVal) _minVal = stat.MinReading.Value;
                     if (stat.MaxReading.Value > _maxVal) _maxVal = stat.MaxReading.Value;
+
+                    if (ShowingRanges && stat.Stat.HasSecondary)
+                    {
+                        if (stat.MinReading.SecondaryValue < _minVal) _minVal = stat.MinReading.SecondaryValue;
+                        if (stat.MaxReading.SecondaryValue > _maxVal) _maxVal = stat.MaxReading.SecondaryValue;
+                    }
                 }
             }
             bool minIsZero = _settings.YMin.Equals("0");

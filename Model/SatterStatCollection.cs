@@ -115,6 +115,7 @@ namespace ActStatter.Model
             string cleanedVal = statVal.Replace("%", "").Replace(",", "");
             double parsedVal = 0;
             double.TryParse(cleanedVal, out parsedVal);
+            double secondaryParsedVal = 0;
 
             var stat = StatterStat.GetStatForKey(statName);
             switch (stat.Key)
@@ -131,6 +132,17 @@ namespace ActStatter.Model
                     // Thanks Kam - these are presented like 625 (for 62.5%)
                     parsedVal = Math.Max(0, parsedVal / 10.0);
                     break;
+                case "Primary_Damage_Range":
+                case "Secondary_Damage_Range":
+                case "Ranged_Damage_Range":
+                    stat.HasSecondary = true;
+                    string[] parts = cleanedVal.Split(new string [] { " - " }, StringSplitOptions.RemoveEmptyEntries);
+                    if (parts.Length >= 2)
+                    {
+                        double.TryParse(parts[1], out parsedVal);
+                        double.TryParse(parts[0], out secondaryParsedVal);
+                    }
+                    break;
                 default:
                     break;
             }
@@ -142,6 +154,7 @@ namespace ActStatter.Model
                 Time = logTime,
                 Player = isFirstPerson ? ActGlobals.charName : playerKey,
                 Value = parsedVal,
+                SecondaryValue = secondaryParsedVal,
                 Overcap = statOc == "OC",
                 FirstPerson = isFirstPerson
             };

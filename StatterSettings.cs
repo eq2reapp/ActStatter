@@ -47,9 +47,8 @@ namespace ActStatter
         public bool GraphShowAverage = false;
         public bool GraphShowEncDps = false;
         public bool GraphShowEncHps = false;
+        public bool GraphShowRanges = false;
         public int EncDpsResolution = 0;
-        public int PopupLastX = 0;
-        public int PopupLastY = 0;
         public int PopupLastW = 0;
         public int PopupLastH = 0;
         public string LastPlayers = "";
@@ -99,18 +98,13 @@ namespace ActStatter
             GraphShowAverage = RetrieveSetting<bool>(rootNode, "GraphShowAverage", false);
             GraphShowEncDps = RetrieveSetting<bool>(rootNode, "GraphShowEncDps", false);
             GraphShowEncHps = RetrieveSetting<bool>(rootNode, "GraphShowEncHps", false);
+            GraphShowRanges = RetrieveSetting<bool>(rootNode, "GraphShowRanges", false);
             EncDpsResolution = RetrieveSetting<int>(rootNode, "EncDpsResolution", 5);
 
             var minSize = StatterViewStatsForm.GetDefaultSize();
             PopupLastW = RetrieveSetting<int>(rootNode, "PopupLastW", minSize.Width);
             PopupLastH = RetrieveSetting<int>(rootNode, "PopupLastH", minSize.Height);
             var curScreen = Screen.FromControl(ActGlobals.oFormActMain);
-            PopupLastX = RetrieveSetting<int>(rootNode, "PopupLastX", (int)Math.Floor((curScreen.WorkingArea.Width - PopupLastW) / 2.0));
-            if (PopupLastX < 0)
-                PopupLastX = 0;
-            PopupLastY = RetrieveSetting<int>(rootNode, "PopupLastY", (int)Math.Floor((curScreen.WorkingArea.Height - PopupLastH) / 2.0));
-            if (PopupLastY < 0)
-                PopupLastY = 0;
 
             LastPlayers = RetrieveSetting<string>(rootNode, "LastPlayers", "");
             LastStat = RetrieveSetting<string>(rootNode, "LastStat", "");
@@ -133,11 +127,10 @@ namespace ActStatter
             AttachChildNode(rootNode, "GraphShowAverage", GraphShowAverage.ToString());
             AttachChildNode(rootNode, "GraphShowEncDps", GraphShowEncDps.ToString());
             AttachChildNode(rootNode, "GraphShowEncHps", GraphShowEncHps.ToString());
+            AttachChildNode(rootNode, "GraphShowRanges", GraphShowRanges.ToString());
             AttachChildNode(rootNode, "EncDpsResolution", EncDpsResolution.ToString());
             AttachChildNode(rootNode, "PopupLastW", PopupLastW.ToString());
             AttachChildNode(rootNode, "PopupLastH", PopupLastH.ToString());
-            AttachChildNode(rootNode, "PopupLastX", PopupLastX.ToString());
-            AttachChildNode(rootNode, "PopupLastY", PopupLastY.ToString());
             AttachChildNode(rootNode, "LastPlayers", LastPlayers);
             AttachChildNode(rootNode, "LastStat", LastStat);
             AttachChildNode(rootNode, "YMin", YMin);
@@ -171,11 +164,10 @@ namespace ActStatter
             sb.AppendLine("  GraphShowAverage = " + GraphShowAverage);
             sb.AppendLine("  GraphShowEncDps = " + GraphShowEncDps);
             sb.AppendLine("  GraphShowEncHps = " + GraphShowEncHps);
+            sb.AppendLine("  GraphShowRanges = " + GraphShowRanges);
             sb.AppendLine("  EncDpsResolution = " + EncDpsResolution.ToString());
             sb.AppendLine("  PopupLastW = " + PopupLastW.ToString());
             sb.AppendLine("  PopupLastH = " + PopupLastH.ToString());
-            sb.AppendLine("  PopupLastX = " + PopupLastX.ToString());
-            sb.AppendLine("  PopupLastY = " + PopupLastY.ToString());
             sb.AppendLine("  LastPlayers = " + LastPlayers);
             sb.AppendLine("  LastStat = " + LastStat);
             sb.AppendLine("  YMin = " + YMin);
