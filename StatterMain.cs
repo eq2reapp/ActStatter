@@ -212,10 +212,7 @@ namespace ActStatter
                     new System.Threading.Thread(new System.Threading.ThreadStart(OFormActMain_UpdateCheckClicked)) { IsBackground = true }.Start();
                 }
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.ToString());
-            }
+            catch { }
         }
 
         // The exit-point from the ACT plugin engine, called when the plugin is unloaded
