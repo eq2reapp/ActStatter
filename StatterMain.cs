@@ -129,40 +129,45 @@ namespace ActStatter
                     string pluginName = plugin.lblPluginTitle.Text;
                     if (pluginName != "ActStatter.dll")
                     {
+                        // Control.ProductVersion was throwing an exception for some users, so trap it.
                         string version = "";
-                        var control = plugin.pluginObj as Control;
-                        if (control != null && control.ProductVersion != null)
-                            version = control.ProductVersion;
-                        if (String.IsNullOrEmpty(version))
+                        try
                         {
-                            control = plugin.pluginObj as UserControl;
+                            var control = plugin.pluginObj as Control;
                             if (control != null && control.ProductVersion != null)
                                 version = control.ProductVersion;
-                        }
-                        if (String.IsNullOrEmpty(version))
-                        {
-                            try
+                            if (String.IsNullOrEmpty(version))
                             {
-                                var assembly = Assembly.LoadFrom(plugin.pluginFile.FullName);
-                                version = assembly.GetName().Version.ToString();
+                                control = plugin.pluginObj as UserControl;
+                                if (control != null && control.ProductVersion != null)
+                                    version = control.ProductVersion;
                             }
-                            catch
+                            if (String.IsNullOrEmpty(version))
                             {
-                                // Read the file manually
-                                if (plugin.pluginFile.Extension.ToLower() != ".dll")
-                                    try
-                                    {
-                                        foreach (var line in File.ReadAllLines(plugin.pluginFile.FullName))
-                                            if (line.Trim().StartsWith("[assembly: AssemblyVersion"))
-                                            {
-                                                string[] parts = line.Split('"');
-                                                if (parts.Length >= 2 && Regex.IsMatch(parts[1].Trim(), @"\d+\.\d+"))
-                                                    version = parts[1].Trim();
-                                            }
-                                    }
-                                    catch { }
+                                try
+                                {
+                                    var assembly = Assembly.LoadFrom(plugin.pluginFile.FullName);
+                                    version = assembly.GetName().Version.ToString();
+                                }
+                                catch
+                                {
+                                    // Read the file manually
+                                    if (plugin.pluginFile.Extension.ToLower() != ".dll")
+                                        try
+                                        {
+                                            foreach (var line in File.ReadAllLines(plugin.pluginFile.FullName))
+                                                if (line.Trim().StartsWith("[assembly: AssemblyVersion"))
+                                                {
+                                                    string[] parts = line.Split('"');
+                                                    if (parts.Length >= 2 && Regex.IsMatch(parts[1].Trim(), @"\d+\.\d+"))
+                                                        version = parts[1].Trim();
+                                                }
+                                        }
+                                        catch { }
+                                }
                             }
                         }
+                        catch { }
                         sbPlugins.AppendLine($"  {plugin.lblPluginTitle.Text} (v{version})");
                     }
                 }
@@ -209,8 +214,7 @@ namespace ActStatter
             }
             catch (Exception ex)
             {
-                Log("Error while initializing");
-                Log(ex.Message);
+                MessageBox.Show(ex.ToString());
             }
         }
 

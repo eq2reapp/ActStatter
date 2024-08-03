@@ -54,13 +54,20 @@ namespace ActStatter.UI
 
         private void StatterUI_Load(object sender, EventArgs e)
         {
-            chkParseOnImport.Checked = _settings.ParseOnImport;
-            chkRestrictChannels.Checked = _settings.RestrictToChannels;
-            txtRestrictChannels.Text = StatterSettings.GetStringFromList(_settings.RestrictedChannels);
-            txtRestrictChannels.Enabled = chkRestrictChannels.Checked;
-
-            SetSelectedStats();
-
+            // Wrap init code to fox an issue for Ombrette
+            try
+            {
+                chkParseOnImport.Checked = _settings.ParseOnImport;
+                chkRestrictChannels.Checked = _settings.RestrictToChannels;
+                txtRestrictChannels.Text = StatterSettings.GetStringFromList(_settings.RestrictedChannels);
+                txtRestrictChannels.Enabled = chkRestrictChannels.Checked;
+            }
+            catch { }
+            try
+            {
+                SetSelectedStats();
+            }
+            catch { }
             _loading = false;
         }
 

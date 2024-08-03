@@ -141,8 +141,6 @@ namespace ActStatter
 
             try
             {
-                if (statter != null)
-                    statter.Log("Saved settings", true);
                 doc.Save(_settingsFile);
             }
             catch (Exception ex) {
