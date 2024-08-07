@@ -122,57 +122,6 @@ namespace ActStatter
                 Log($"DotNet: {RuntimeInformation.FrameworkDescription}");
                 Log($"ACT: {Environment.CurrentDirectory} (v{ActGlobals.oFormActMain.GetVersion()})");
 
-                StringBuilder sbPlugins = new StringBuilder();
-                sbPlugins.AppendLine("Plugins:");
-                foreach (var plugin in ActGlobals.oFormActMain.ActPlugins)
-                {
-                    string pluginName = plugin.lblPluginTitle.Text;
-                    if (pluginName != "ActStatter.dll")
-                    {
-                        // Control.ProductVersion was throwing an exception for some users, so trap it.
-                        string version = "";
-                        try
-                        {
-                            var control = plugin.pluginObj as Control;
-                            if (control != null && control.ProductVersion != null)
-                                version = control.ProductVersion;
-                            if (String.IsNullOrEmpty(version))
-                            {
-                                control = plugin.pluginObj as UserControl;
-                                if (control != null && control.ProductVersion != null)
-                                    version = control.ProductVersion;
-                            }
-                            if (String.IsNullOrEmpty(version))
-                            {
-                                try
-                                {
-                                    var assembly = Assembly.LoadFrom(plugin.pluginFile.FullName);
-                                    version = assembly.GetName().Version.ToString();
-                                }
-                                catch
-                                {
-                                    // Read the file manually
-                                    if (plugin.pluginFile.Extension.ToLower() != ".dll")
-                                        try
-                                        {
-                                            foreach (var line in File.ReadAllLines(plugin.pluginFile.FullName))
-                                                if (line.Trim().StartsWith("[assembly: AssemblyVersion"))
-                                                {
-                                                    string[] parts = line.Split('"');
-                                                    if (parts.Length >= 2 && Regex.IsMatch(parts[1].Trim(), @"\d+\.\d+"))
-                                                        version = parts[1].Trim();
-                                                }
-                                        }
-                                        catch { }
-                                }
-                            }
-                        }
-                        catch { }
-                        sbPlugins.AppendLine($"  {plugin.lblPluginTitle.Text} (v{version})");
-                    }
-                }
-                Log(sbPlugins.ToString().Trim());
-
                 StringBuilder sbScreens = new StringBuilder();
                 sbScreens.AppendLine("Screens:");
                 int screenNum = 1;
