@@ -71,6 +71,7 @@ namespace ActStatter.Model
             { "Lethality", "Lethality" },
             { "LethalityPercent", "Lethality %" },
             { "LifetimeStatus", "Lifetime Status" },
+            { "MeleeMult", "Melee Multiplier" },
             { "Noxious", "Noxious Mit" },
             { "Physical", "Physical Mit" },
             { "Potency", "Potency" },
