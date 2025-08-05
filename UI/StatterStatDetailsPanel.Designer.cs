@@ -1,4 +1,6 @@
-﻿namespace ActStatter.UI
+﻿using Advanced_Combat_Tracker;
+
+namespace ActStatter.UI
 {
     partial class StatterStatDetailsPanel
     {
@@ -31,9 +33,9 @@
             this.pnlColour = new System.Windows.Forms.Panel();
             this.lblName = new System.Windows.Forms.Label();
             this.dlgColour = new System.Windows.Forms.ColorDialog();
-            this.panel1 = new System.Windows.Forms.Panel();
-            this.btnDelete = new System.Windows.Forms.Button();
-            this.panel1.SuspendLayout();
+            this.pnlMain = new System.Windows.Forms.Panel();
+            this.btnDelete = new ButtonPainted();
+            this.pnlMain.SuspendLayout();
             this.SuspendLayout();
             // 
             // pnlColour
@@ -63,17 +65,17 @@
             this.dlgColour.AnyColor = true;
             this.dlgColour.FullOpen = true;
             // 
-            // panel1
+            // pnlMain
             // 
-            this.panel1.BackColor = System.Drawing.SystemColors.Window;
-            this.panel1.Controls.Add(this.btnDelete);
-            this.panel1.Controls.Add(this.lblName);
-            this.panel1.Controls.Add(this.pnlColour);
-            this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel1.Location = new System.Drawing.Point(1, 1);
-            this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(218, 29);
-            this.panel1.TabIndex = 4;
+            this.pnlMain.BackColor = System.Drawing.SystemColors.Window;
+            this.pnlMain.Controls.Add(this.btnDelete);
+            this.pnlMain.Controls.Add(this.lblName);
+            this.pnlMain.Controls.Add(this.pnlColour);
+            this.pnlMain.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.pnlMain.Location = new System.Drawing.Point(1, 1);
+            this.pnlMain.Name = "pnlMain";
+            this.pnlMain.Size = new System.Drawing.Size(218, 29);
+            this.pnlMain.TabIndex = 4;
             // 
             // btnDelete
             // 
@@ -91,14 +93,14 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ControlLight;
-            this.Controls.Add(this.panel1);
+            this.Controls.Add(this.pnlMain);
             this.Margin = new System.Windows.Forms.Padding(1);
             this.Name = "StatterStatDetailsPanel";
             this.Padding = new System.Windows.Forms.Padding(1);
             this.Size = new System.Drawing.Size(220, 31);
             this.Load += new System.EventHandler(this.StatDetails_Load);
-            this.panel1.ResumeLayout(false);
-            this.panel1.PerformLayout();
+            this.pnlMain.ResumeLayout(false);
+            this.pnlMain.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -108,7 +110,7 @@
         private System.Windows.Forms.Panel pnlColour;
         private System.Windows.Forms.Label lblName;
         private System.Windows.Forms.ColorDialog dlgColour;
-        private System.Windows.Forms.Panel panel1;
-        private System.Windows.Forms.Button btnDelete;
+        private System.Windows.Forms.Panel pnlMain;
+        private ButtonPainted btnDelete;
     }
 }

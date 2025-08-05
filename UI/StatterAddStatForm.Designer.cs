@@ -1,4 +1,6 @@
-﻿namespace ActStatter.UI
+﻿using Advanced_Combat_Tracker;
+
+namespace ActStatter.UI
 {
     partial class StatterAddStatForm
     {
@@ -30,11 +32,8 @@
         {
             this.cmbStat = new System.Windows.Forms.ComboBox();
             this.lblName = new System.Windows.Forms.Label();
-            this.pnlColour = new System.Windows.Forms.Panel();
-            this.label3 = new System.Windows.Forms.Label();
-            this.btnOk = new System.Windows.Forms.Button();
-            this.btnCancel = new System.Windows.Forms.Button();
-            this.dlgColour = new System.Windows.Forms.ColorDialog();
+            this.btnOk = new Advanced_Combat_Tracker.ButtonPainted();
+            this.btnCancel = new Advanced_Combat_Tracker.ButtonPainted();
             this.SuspendLayout();
             // 
             // cmbStat
@@ -54,27 +53,6 @@
             this.lblName.Size = new System.Drawing.Size(26, 13);
             this.lblName.TabIndex = 6;
             this.lblName.Text = "Stat";
-            // 
-            // pnlColour
-            // 
-            this.pnlColour.BackColor = System.Drawing.Color.Blue;
-            this.pnlColour.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.pnlColour.Location = new System.Drawing.Point(261, 38);
-            this.pnlColour.Name = "pnlColour";
-            this.pnlColour.Size = new System.Drawing.Size(29, 22);
-            this.pnlColour.TabIndex = 5;
-            this.pnlColour.Visible = false;
-            this.pnlColour.Click += new System.EventHandler(this.pnlColour_Click);
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(256, 19);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(37, 13);
-            this.label3.TabIndex = 6;
-            this.label3.Text = "Colour";
-            this.label3.Visible = false;
             // 
             // btnOk
             // 
@@ -99,23 +77,14 @@
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
-            // dlgColour
-            // 
-            this.dlgColour.AnyColor = true;
-            this.dlgColour.FullOpen = true;
-            // 
             // StatterAddStatForm
             // 
-            this.AcceptButton = this.btnOk;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.CancelButton = this.btnCancel;
             this.ClientSize = new System.Drawing.Size(315, 130);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
-            this.Controls.Add(this.label3);
             this.Controls.Add(this.lblName);
-            this.Controls.Add(this.pnlColour);
             this.Controls.Add(this.cmbStat);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
@@ -126,6 +95,7 @@
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
             this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
             this.Text = "Add Stat";
+            this.Load += new System.EventHandler(this.StatterAddStatForm_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -135,10 +105,7 @@
 
         private System.Windows.Forms.ComboBox cmbStat;
         private System.Windows.Forms.Label lblName;
-        private System.Windows.Forms.Panel pnlColour;
-        private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Button btnOk;
-        private System.Windows.Forms.Button btnCancel;
-        private System.Windows.Forms.ColorDialog dlgColour;
+        private ButtonPainted btnOk;
+        private ButtonPainted btnCancel;
     }
 }

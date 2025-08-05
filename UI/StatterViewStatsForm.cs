@@ -16,6 +16,8 @@ namespace ActStatter.UI
         private const string OPTION_ENC_NONE = "None";
         private const string OPTION_ENC_DPS = "DPS";
         private const string OPTION_ENC_HPS = "HPS";
+        private const string OPTION_ENC_AUTO = "Auto-attack";
+        private const string OPTION_ENC_SKILLS = "Abilities";
 
         private List<StatterEncounterStat> _stats = new List<StatterEncounterStat>();
         private List<StatterEncounterStat> _selectedStats = new List<StatterEncounterStat>();
@@ -54,6 +56,13 @@ namespace ActStatter.UI
         {
             var parentBounds = ActGlobals.oFormActMain.Bounds;
             this.SetBounds(parentBounds.X + 10, parentBounds.Y + 10, _settings.PopupLastW, _settings.PopupLastH);
+            var currentScreen = Screen.FromControl(this);
+            if (this.Bottom > currentScreen.WorkingArea.Height) {
+                this.Top = currentScreen.WorkingArea.Height - this.Height;
+            }
+            if (this.Right > currentScreen.WorkingArea.Width) {
+                this.Left = currentScreen.WorkingArea.Width - this.Width;
+            }
         }
 
         private void StatterViewStatsForm_SizeOrLocationChanged(object sender, EventArgs e)
@@ -70,6 +79,8 @@ namespace ActStatter.UI
 
         private void StatterViewStatsForm_Load(object sender, EventArgs e)
         {
+            SetColours();
+
             // Load some initial values from settings
             chkShowAverage.Checked = _settings.GraphShowAverage;
             chkShowRange.Checked = _settings.GraphShowRanges;
@@ -78,12 +89,18 @@ namespace ActStatter.UI
             cmbShowValues.Items.AddRange(new string[] {
                 OPTION_ENC_NONE,
                 OPTION_ENC_DPS,
+                OPTION_ENC_AUTO,
+                OPTION_ENC_SKILLS,
                 OPTION_ENC_HPS
             });
             if (_settings.GraphShowEncDps)
                 cmbShowValues.SelectedItem = OPTION_ENC_DPS;
             else if (_settings.GraphShowEncHps)
                 cmbShowValues.SelectedItem = OPTION_ENC_HPS;
+            else if (_settings.GraphShowEncAuto)
+                cmbShowValues.SelectedItem = OPTION_ENC_AUTO;
+            else if (_settings.GraphShowEncSkills)
+                cmbShowValues.SelectedItem = OPTION_ENC_SKILLS;
             else
                 cmbShowValues.SelectedItem = OPTION_ENC_NONE;
 
@@ -115,6 +132,29 @@ namespace ActStatter.UI
             UpdateGraph();
         }
 
+        private void SetColours()
+        {
+            Color fg = ActGlobals.oFormActMain.ActColorSettings.MainWindowColors.ForeColorSetting;
+            Color bg = ActGlobals.oFormActMain.ActColorSettings.MainWindowColors.BackColorSetting;
+
+            this.BackColor = bg;
+            this.ForeColor = fg;
+            lblPlayer.ForeColor = fg;
+            lblNotes.ForeColor = fg;
+            lblAxis.ForeColor = fg;
+            lblShowVals.ForeColor = fg;
+            lblResolution.ForeColor = fg;
+            lbPlayers.BackColor = bg;
+            lbPlayers.ForeColor = fg;
+            dgStats.BackgroundColor = bg;
+            dgStats.ForeColor = fg;
+            dgStats.GridColor = bg;
+            cmbYAxis.BackColor = bg;
+            cmbYAxis.ForeColor = fg;
+            cmbShowValues.BackColor = bg;
+            cmbShowValues.ForeColor = fg;
+        }
+
         private void StatterViewStatsForm_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Escape)
@@ -129,6 +169,12 @@ namespace ActStatter.UI
             string[] stats = { "Crit_Bonus", "Fervor", "Potency", "AbilityDoubleAttack", "Resolve", "Primary_Damage_Range" };
             int[] statMin = { 30000, 1100, 1100000, 550, 9400, 200000 };
             int[] statMax = { 41000, 2100, 1400000, 650, 9400, 400000 };
+            if (_end == DateTime.MinValue) {
+                _end = DateTime.Now;
+                _start = _end.Subtract(TimeSpan.FromMinutes(5));
+                var zd = new ZoneData(_start, "Norrath", true, true, false)
+;               _encData = new EncounterData("Reapp", zd.ZoneName, zd);
+            }
             Array.ForEach(players, player =>
             {
                 for (int j = 0; j < stats.Length; j++)
@@ -167,31 +213,7 @@ namespace ActStatter.UI
 
         private void lbPlayers_MouseUp(object sender, MouseEventArgs e)
         {
-            List<string> selectedPlayerKeys = new List<string>();
-            for (int i = 0; i < lbPlayers.CheckedItems.Count; i++)
-            {
-                // If the first person char, use the condensed StatterStatReading.DEFAULT_PLAYER_NAME
-                var playerLabel = lbPlayers.CheckedItems[i].ToString();
-                var playerKey = playerLabel;
-                if (StatterStatReading.IsFirstPersonLabel(playerLabel))
-                    playerKey = StatterStatReading.DEFAULT_PLAYER_KEY;
-
-                selectedPlayerKeys.Add(playerKey);
-            }
-
-            // Only update if the players have changed - we need this because there's
-            // no event on the control itself to indicate this.
-            if (string.Join(":", selectedPlayerKeys) != string.Join(":", _selectedPlayerKeys))
-            {
-                ClearSelectedStats();
-
-                // Keep track of these players for next time the listbox has a click
-                _selectedPlayerKeys = selectedPlayerKeys;
-                _settings.LastPlayers = String.Join(", ", _selectedPlayerKeys);
-                _settings.Save(_statter);
-
-                RefreshTableAndGraph();
-            }
+            RefreshSelectedPlayers();
         }
 
         private void lbPlayers_SelectedIndexChanged(object sender, EventArgs e)
@@ -200,16 +222,37 @@ namespace ActStatter.UI
             lbPlayers.SelectedIndices.Clear();
         }
 
+        private void btnSelectAll_Click(object sender, EventArgs e)
+        {
+            for (int i = 0; i < lbPlayers.Items.Count; i++) {
+                lbPlayers.SetItemChecked(i, true);
+            }
+            RefreshSelectedPlayers();
+        }
+
+        private void btnSelectNone_Click(object sender, EventArgs e)
+        {
+            for (int i = 0; i < lbPlayers.Items.Count; i++) {
+                lbPlayers.SetItemChecked(i, false);
+            }
+            RefreshSelectedPlayers();
+        }
+
         private void dgStats_DataBindingComplete(object sender, DataGridViewBindingCompleteEventArgs e)
         {
-            Color oddBg = Color.White;
-            Color evenBg = Color.FromArgb(230, 230, 230);
+            Color fg = dgStats.ForeColor;
+            Color oddBg = dgStats.BackgroundColor;
+            Color evenBg = Color.FromArgb(220, 220, 220);
+            if (oddBg.GetBrightness() < 0.5) {
+                evenBg = Color.FromArgb(80, 80, 80);
+            }
 
             bool isOdd = true;
             for (int i = 0; i < dgStats.RowCount; i++)
             {
                 if (!string.IsNullOrEmpty(dgStats.Rows[i].Cells[0].Value.ToString()))
                     isOdd = !isOdd;
+                dgStats.Rows[i].DefaultCellStyle.ForeColor = fg;
                 dgStats.Rows[i].DefaultCellStyle.BackColor = isOdd ? oddBg : evenBg;
             }
         }
@@ -260,6 +303,8 @@ namespace ActStatter.UI
         {
             _settings.GraphShowEncDps = false;
             _settings.GraphShowEncHps = false;
+            _settings.GraphShowEncAuto = false;
+            _settings.GraphShowEncSkills = false;
             switch (cmbShowValues.SelectedItem)
             {
                 case OPTION_ENC_NONE:
@@ -269,6 +314,12 @@ namespace ActStatter.UI
                     break;
                 case OPTION_ENC_HPS:
                     _settings.GraphShowEncHps = true;
+                    break;
+                case OPTION_ENC_AUTO:
+                    _settings.GraphShowEncAuto = true;
+                    break;
+                case OPTION_ENC_SKILLS:
+                    _settings.GraphShowEncSkills = true;
                     break;
             }
             _settings.Save(_statter);
@@ -361,6 +412,33 @@ namespace ActStatter.UI
 
             // Calculate then show min/max etc for each stat for the initial selected player
             RefreshTableAndGraph();
+        }
+
+        private void RefreshSelectedPlayers()
+        {
+            List<string> selectedPlayerKeys = new List<string>();
+            for (int i = 0; i < lbPlayers.CheckedItems.Count; i++) {
+                // If the first person char, use the condensed StatterStatReading.DEFAULT_PLAYER_NAME
+                var playerLabel = lbPlayers.CheckedItems[i].ToString();
+                var playerKey = playerLabel;
+                if (StatterStatReading.IsFirstPersonLabel(playerLabel))
+                    playerKey = StatterStatReading.DEFAULT_PLAYER_KEY;
+
+                selectedPlayerKeys.Add(playerKey);
+            }
+
+            // Only update if the players have changed - we need this because there's
+            // no event on the control itself to indicate this.
+            if (string.Join(":", selectedPlayerKeys) != string.Join(":", _selectedPlayerKeys)) {
+                ClearSelectedStats();
+
+                // Keep track of these players for next time the listbox has a click
+                _selectedPlayerKeys = selectedPlayerKeys;
+                _settings.LastPlayers = String.Join(", ", _selectedPlayerKeys);
+                _settings.Save(_statter);
+
+                RefreshTableAndGraph();
+            }
         }
 
         public void ShowTableStatsForPlayerKeys(List<string> playerKeys)
@@ -541,7 +619,7 @@ namespace ActStatter.UI
 
         private void UpdateGraph()
         {
-            statGraph.DrawStats(_selectedStats, _start, _end, _encData);
+            statGraph.DrawStats(_selectedStats, _start, _end, _encData, this.ForeColor, this.BackColor);
             pnlExtraControls.Enabled = _selectedStats.Count > 0;
         }
 

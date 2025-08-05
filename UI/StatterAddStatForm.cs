@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using System.Drawing;
 using ActStatter.Model;
+using Advanced_Combat_Tracker;
 
 namespace ActStatter.UI
 {
@@ -14,6 +15,20 @@ namespace ActStatter.UI
         public StatterAddStatForm()
         {
             InitializeComponent();
+        }
+
+        private void StatterAddStatForm_Load(object sender, EventArgs e)
+        {
+            SetColours();
+        }
+
+        private void SetColours()
+        {
+            Color fg = ActGlobals.oFormActMain.ActColorSettings.MainWindowColors.ForeColorSetting;
+            Color bg = ActGlobals.oFormActMain.ActColorSettings.MainWindowColors.BackColorSetting;
+
+            this.BackColor = bg;
+            lblName.ForeColor = fg;
         }
 
         public void SetUsedStats(List<string> usedStatNames)
@@ -28,30 +43,17 @@ namespace ActStatter.UI
                 cmbStat.SelectedIndex = 0;
         }
 
-        public void SetColour(Color colour)
-        {
-            dlgColour.Color = colour;
-            pnlColour.BackColor = colour;
-        }
-
-        private void pnlColour_Click(object sender, EventArgs e)
-        {
-            dlgColour.Color = pnlColour.BackColor;
-            if (dlgColour.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                pnlColour.BackColor = dlgColour.Color;
-        }
-
         private void btnOk_Click(object sender, EventArgs e)
         {
             if (cmbStat.SelectedItem == null) return;
 
-            _addedStat = new StatterStat(cmbStat.SelectedItem.ToString()) { Colour = pnlColour.BackColor };
-            DialogResult = System.Windows.Forms.DialogResult.OK;
+            _addedStat = new StatterStat(cmbStat.SelectedItem.ToString());
+            DialogResult = DialogResult.OK;
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
-            DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            DialogResult = DialogResult.Cancel;
         }
     }
 }

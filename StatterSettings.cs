@@ -47,6 +47,8 @@ namespace ActStatter
         public bool GraphShowAverage = false;
         public bool GraphShowEncDps = false;
         public bool GraphShowEncHps = false;
+        public bool GraphShowEncAuto = false;
+        public bool GraphShowEncSkills = false;
         public bool GraphShowRanges = false;
         public int EncDpsResolution = 0;
         public int PopupLastW = 0;
@@ -98,6 +100,8 @@ namespace ActStatter
             GraphShowAverage = RetrieveSetting<bool>(rootNode, "GraphShowAverage", false);
             GraphShowEncDps = RetrieveSetting<bool>(rootNode, "GraphShowEncDps", false);
             GraphShowEncHps = RetrieveSetting<bool>(rootNode, "GraphShowEncHps", false);
+            GraphShowEncAuto = RetrieveSetting<bool>(rootNode, "GraphShowEncAuto", false);
+            GraphShowEncSkills = RetrieveSetting<bool>(rootNode, "GraphShowEncSkills", false);
             GraphShowRanges = RetrieveSetting<bool>(rootNode, "GraphShowRanges", false);
             EncDpsResolution = RetrieveSetting<int>(rootNode, "EncDpsResolution", 5);
 
@@ -127,6 +131,8 @@ namespace ActStatter
             AttachChildNode(rootNode, "GraphShowAverage", GraphShowAverage.ToString());
             AttachChildNode(rootNode, "GraphShowEncDps", GraphShowEncDps.ToString());
             AttachChildNode(rootNode, "GraphShowEncHps", GraphShowEncHps.ToString());
+            AttachChildNode(rootNode, "GraphShowEncAuto", GraphShowEncAuto.ToString());
+            AttachChildNode(rootNode, "GraphShowEncSkills", GraphShowEncSkills.ToString());
             AttachChildNode(rootNode, "GraphShowRanges", GraphShowRanges.ToString());
             AttachChildNode(rootNode, "EncDpsResolution", EncDpsResolution.ToString());
             AttachChildNode(rootNode, "PopupLastW", PopupLastW.ToString());
@@ -162,6 +168,8 @@ namespace ActStatter
             sb.AppendLine("  GraphShowAverage = " + GraphShowAverage);
             sb.AppendLine("  GraphShowEncDps = " + GraphShowEncDps);
             sb.AppendLine("  GraphShowEncHps = " + GraphShowEncHps);
+            sb.AppendLine("  GraphShowEncAuto = " + GraphShowEncAuto);
+            sb.AppendLine("  GraphShowEncSkills = " + GraphShowEncSkills);
             sb.AppendLine("  GraphShowRanges = " + GraphShowRanges);
             sb.AppendLine("  EncDpsResolution = " + EncDpsResolution.ToString());
             sb.AppendLine("  PopupLastW = " + PopupLastW.ToString());

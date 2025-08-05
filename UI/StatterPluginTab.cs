@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
 using ActStatter.Model;
+using Advanced_Combat_Tracker;
 
 namespace ActStatter.UI
 {
@@ -54,9 +55,9 @@ namespace ActStatter.UI
 
         private void StatterUI_Load(object sender, EventArgs e)
         {
-            // Wrap init code to fox an issue for Ombrette
-            try
-            {
+            // Wrap init code to fix an issue for Ombrette
+            try {
+                SetColours();
                 chkParseOnImport.Checked = _settings.ParseOnImport;
                 chkRestrictChannels.Checked = _settings.RestrictToChannels;
                 txtRestrictChannels.Text = StatterSettings.GetStringFromList(_settings.RestrictedChannels);
@@ -71,10 +72,31 @@ namespace ActStatter.UI
             _loading = false;
         }
 
+        private void SetColours()
+        {
+            Color fg = ActGlobals.oFormActMain.ActColorSettings.MainWindowColors.ForeColorSetting;
+            Color bg = ActGlobals.oFormActMain.ActColorSettings.MainWindowColors.BackColorSetting;
+
+            pnlMain.BackColor = bg;
+            pnlMain.ForeColor = fg;
+            grpStatterConfig.ForeColor = fg;
+            grpTrackedStats.ForeColor = fg;
+            grpGeneralOptions.ForeColor = fg;
+            txtRestrictChannels.BackColor = bg;
+            txtRestrictChannels.ForeColor = fg;
+
+            pnlInstructionsContainer.BackColor = bg;
+            pnlInstructions.BackColor = bg;
+            tabExtra.BackColor = bg;
+            tabInstructions.BackColor = bg;
+            tabLogs.BackColor = bg;
+            txtLogs.BackColor = bg;
+            txtLogs.ForeColor = fg;
+        }
+
         private void btnAdd_Click(object sender, EventArgs e)
         {
             _dlgAddStat.SetUsedStats(GetUsedStatNames());
-            _dlgAddStat.SetColour(_cStatColours[_settings.Stats.Count % _cStatColours.Length]);
 
             _dlgAddStat.Location = btnAdd.PointToScreen(btnAdd.Location);
             if (_dlgAddStat.ShowDialog(this) == DialogResult.OK)
@@ -208,7 +230,7 @@ namespace ActStatter.UI
             txtLogs.Lines = null;
         }
 
-        private void lnkOpenHelp_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        private void btnOpenInstructions_Click(object sender, EventArgs e)
         {
             Process.Start(StatterMain.HELP_PAGE);
         }

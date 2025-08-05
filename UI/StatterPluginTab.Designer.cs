@@ -1,4 +1,6 @@
-﻿namespace ActStatter.UI
+﻿using Advanced_Combat_Tracker;
+
+namespace ActStatter.UI
 {
     partial class StatterPluginTab
     {
@@ -32,21 +34,21 @@
             this.grpStatterConfig = new System.Windows.Forms.GroupBox();
             this.grpGeneralOptions = new System.Windows.Forms.GroupBox();
             this.txtRestrictChannels = new System.Windows.Forms.TextBox();
-            this.chkRestrictChannels = new System.Windows.Forms.CheckBox();
-            this.chkParseOnImport = new System.Windows.Forms.CheckBox();
+            this.chkRestrictChannels = new Advanced_Combat_Tracker.CheckboxButtonPainted();
+            this.chkParseOnImport = new Advanced_Combat_Tracker.CheckboxButtonPainted();
             this.pnlInstructionsContainer = new System.Windows.Forms.Panel();
             this.tabExtra = new System.Windows.Forms.TabControl();
             this.tabInstructions = new System.Windows.Forms.TabPage();
             this.pnlInstructions = new System.Windows.Forms.Panel();
-            this.lnkOpenHelp = new System.Windows.Forms.LinkLabel();
+            this.btnOpenInstructions = new Advanced_Combat_Tracker.ButtonPainted();
             this.tabLogs = new System.Windows.Forms.TabPage();
-            this.btnClearLogs = new System.Windows.Forms.Button();
-            this.btnRefresh = new System.Windows.Forms.Button();
-            this.btnCopyLogs = new System.Windows.Forms.Button();
+            this.btnClearLogs = new Advanced_Combat_Tracker.ButtonPainted();
+            this.btnRefresh = new Advanced_Combat_Tracker.ButtonPainted();
+            this.btnCopyLogs = new Advanced_Combat_Tracker.ButtonPainted();
             this.txtLogs = new System.Windows.Forms.TextBox();
             this.grpTrackedStats = new System.Windows.Forms.GroupBox();
             this.pnlStatDetails = new System.Windows.Forms.FlowLayoutPanel();
-            this.btnAdd = new System.Windows.Forms.Button();
+            this.btnAdd = new Advanced_Combat_Tracker.ButtonPainted();
             this.pnlMain.SuspendLayout();
             this.grpStatterConfig.SuspendLayout();
             this.grpGeneralOptions.SuspendLayout();
@@ -166,7 +168,7 @@
             // pnlInstructions
             // 
             this.pnlInstructions.BackColor = System.Drawing.SystemColors.Window;
-            this.pnlInstructions.Controls.Add(this.lnkOpenHelp);
+            this.pnlInstructions.Controls.Add(this.btnOpenInstructions);
             this.pnlInstructions.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pnlInstructions.Location = new System.Drawing.Point(3, 3);
             this.pnlInstructions.Name = "pnlInstructions";
@@ -174,18 +176,15 @@
             this.pnlInstructions.Size = new System.Drawing.Size(565, 580);
             this.pnlInstructions.TabIndex = 13;
             // 
-            // lnkOpenHelp
+            // btnOpenInstructions
             // 
-            this.lnkOpenHelp.ActiveLinkColor = System.Drawing.Color.Blue;
-            this.lnkOpenHelp.AutoSize = true;
-            this.lnkOpenHelp.Location = new System.Drawing.Point(18, 18);
-            this.lnkOpenHelp.Name = "lnkOpenHelp";
-            this.lnkOpenHelp.Size = new System.Drawing.Size(166, 13);
-            this.lnkOpenHelp.TabIndex = 0;
-            this.lnkOpenHelp.TabStop = true;
-            this.lnkOpenHelp.Text = "Open a help page in your browser";
-            this.lnkOpenHelp.VisitedLinkColor = System.Drawing.Color.Blue;
-            this.lnkOpenHelp.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.lnkOpenHelp_LinkClicked);
+            this.btnOpenInstructions.Location = new System.Drawing.Point(19, 19);
+            this.btnOpenInstructions.Name = "btnOpenInstructions";
+            this.btnOpenInstructions.Size = new System.Drawing.Size(217, 23);
+            this.btnOpenInstructions.TabIndex = 0;
+            this.btnOpenInstructions.Text = "Open a help page in your browser";
+            this.btnOpenInstructions.UseVisualStyleBackColor = true;
+            this.btnOpenInstructions.Click += new System.EventHandler(this.btnOpenInstructions_Click);
             // 
             // tabLogs
             // 
@@ -300,7 +299,6 @@
             this.tabExtra.ResumeLayout(false);
             this.tabInstructions.ResumeLayout(false);
             this.pnlInstructions.ResumeLayout(false);
-            this.pnlInstructions.PerformLayout();
             this.tabLogs.ResumeLayout(false);
             this.tabLogs.PerformLayout();
             this.grpTrackedStats.ResumeLayout(false);
@@ -312,22 +310,22 @@
 
         private System.Windows.Forms.Panel pnlMain;
         private System.Windows.Forms.GroupBox grpStatterConfig;
-        private System.Windows.Forms.Button btnAdd;
+        private ButtonPainted btnAdd;
         private System.Windows.Forms.FlowLayoutPanel pnlStatDetails;
         private System.Windows.Forms.GroupBox grpTrackedStats;
         private System.Windows.Forms.Panel pnlInstructions;
         private System.Windows.Forms.Panel pnlInstructionsContainer;
         private System.Windows.Forms.GroupBox grpGeneralOptions;
-        protected internal System.Windows.Forms.CheckBox chkParseOnImport;
+        protected internal CheckboxButtonPainted chkParseOnImport;
         private System.Windows.Forms.TabControl tabExtra;
         private System.Windows.Forms.TabPage tabInstructions;
         private System.Windows.Forms.TabPage tabLogs;
         private System.Windows.Forms.TextBox txtLogs;
-        private System.Windows.Forms.Button btnCopyLogs;
-        private System.Windows.Forms.Button btnRefresh;
-        private System.Windows.Forms.LinkLabel lnkOpenHelp;
-        private System.Windows.Forms.Button btnClearLogs;
+        private ButtonPainted btnCopyLogs;
+        private ButtonPainted btnRefresh;
+        private ButtonPainted btnClearLogs;
         private System.Windows.Forms.TextBox txtRestrictChannels;
-        protected internal System.Windows.Forms.CheckBox chkRestrictChannels;
+        protected internal CheckboxButtonPainted chkRestrictChannels;
+        private ButtonPainted btnOpenInstructions;
     }
 }

@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Drawing;
 using System.Windows.Forms;
 using ActStatter.Model;
+using Advanced_Combat_Tracker;
 
 namespace ActStatter.UI
 {
@@ -24,8 +26,18 @@ namespace ActStatter.UI
 
         private void StatDetails_Load(object sender, EventArgs e)
         {
+            SetColours();
             lblName.Text = _stat.Name;
             pnlColour.BackColor = _stat.Colour;
+        }
+
+        private void SetColours()
+        {
+            Color fg = ActGlobals.oFormActMain.ActColorSettings.MainWindowColors.ForeColorSetting;
+            Color bg = ActGlobals.oFormActMain.ActColorSettings.MainWindowColors.BackColorSetting;
+
+            pnlMain.BackColor = bg;
+            lblName.ForeColor = fg;
         }
 
         private void pnlColour_Click(object sender, EventArgs e)
