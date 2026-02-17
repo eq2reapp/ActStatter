@@ -17,8 +17,8 @@ namespace ActStatter.Util
             else if (number > 100000000)
                 return (number / 1000000.0).ToString("0") + "M";
             else if (number > 1000000)
-                return (number / 1000000.0).ToString("0.00") + "M";
-            else if (number > 100000)
+                return (number / 1000000.0).ToString("0.000") + "M";
+            else if (number > 200000)
                 return (number / 1000.0).ToString("0") + "K";
             return number.ToString("0");
         }
