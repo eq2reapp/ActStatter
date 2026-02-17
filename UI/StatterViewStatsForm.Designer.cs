@@ -31,6 +31,7 @@ namespace ActStatter.UI
         private void InitializeComponent()
         {
             this.pnlGraph = new System.Windows.Forms.Panel();
+            this.statGraph = new ActStatter.UI.StatterStatGraph();
             this.pnlGraphControls = new System.Windows.Forms.Panel();
             this.lblNotes = new System.Windows.Forms.Label();
             this.chkShowAverage = new Advanced_Combat_Tracker.CheckboxButtonPainted();
@@ -48,7 +49,6 @@ namespace ActStatter.UI
             this.chkShowRange = new Advanced_Combat_Tracker.CheckboxButtonPainted();
             this.btnSelectAll = new Advanced_Combat_Tracker.ButtonPainted();
             this.btnSelectNone = new Advanced_Combat_Tracker.ButtonPainted();
-            this.statGraph = new ActStatter.UI.StatterStatGraph();
             this.dgStats = new ActStatter.UI.StatterFastDataGrid();
             this.ColStat = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Player = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -69,18 +69,27 @@ namespace ActStatter.UI
             | System.Windows.Forms.AnchorStyles.Right)));
             this.pnlGraph.Controls.Add(this.statGraph);
             this.pnlGraph.Controls.Add(this.pnlGraphControls);
-            this.pnlGraph.Location = new System.Drawing.Point(347, 22);
+            this.pnlGraph.Location = new System.Drawing.Point(366, 22);
             this.pnlGraph.Name = "pnlGraph";
             this.pnlGraph.Padding = new System.Windows.Forms.Padding(5);
-            this.pnlGraph.Size = new System.Drawing.Size(637, 604);
+            this.pnlGraph.Size = new System.Drawing.Size(618, 604);
             this.pnlGraph.TabIndex = 2;
+            // 
+            // statGraph
+            // 
+            this.statGraph.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.statGraph.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.statGraph.Location = new System.Drawing.Point(5, 5);
+            this.statGraph.Name = "statGraph";
+            this.statGraph.Size = new System.Drawing.Size(608, 594);
+            this.statGraph.TabIndex = 1;
             // 
             // pnlGraphControls
             // 
             this.pnlGraphControls.Dock = System.Windows.Forms.DockStyle.Top;
             this.pnlGraphControls.Location = new System.Drawing.Point(5, 5);
             this.pnlGraphControls.Name = "pnlGraphControls";
-            this.pnlGraphControls.Size = new System.Drawing.Size(627, 0);
+            this.pnlGraphControls.Size = new System.Drawing.Size(608, 0);
             this.pnlGraphControls.TabIndex = 0;
             // 
             // lblNotes
@@ -88,14 +97,14 @@ namespace ActStatter.UI
             this.lblNotes.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.lblNotes.Location = new System.Drawing.Point(12, 455);
             this.lblNotes.Name = "lblNotes";
-            this.lblNotes.Size = new System.Drawing.Size(329, 204);
+            this.lblNotes.Size = new System.Drawing.Size(347, 204);
             this.lblNotes.TabIndex = 3;
             this.lblNotes.Text = "lblNotes is modified on form load\r\n";
             // 
             // chkShowAverage
             // 
             this.chkShowAverage.AutoSize = true;
-            this.chkShowAverage.Location = new System.Drawing.Point(513, 6);
+            this.chkShowAverage.Location = new System.Drawing.Point(531, 6);
             this.chkShowAverage.Name = "chkShowAverage";
             this.chkShowAverage.Size = new System.Drawing.Size(96, 17);
             this.chkShowAverage.TabIndex = 5;
@@ -187,7 +196,7 @@ namespace ActStatter.UI
             this.lbPlayers.IntegralHeight = false;
             this.lbPlayers.Location = new System.Drawing.Point(6, 27);
             this.lbPlayers.Name = "lbPlayers";
-            this.lbPlayers.Size = new System.Drawing.Size(335, 209);
+            this.lbPlayers.Size = new System.Drawing.Size(355, 209);
             this.lbPlayers.TabIndex = 16;
             this.lbPlayers.SelectedIndexChanged += new System.EventHandler(this.lbPlayers_SelectedIndexChanged);
             this.lbPlayers.MouseUp += new System.Windows.Forms.MouseEventHandler(this.lbPlayers_MouseUp);
@@ -199,7 +208,7 @@ namespace ActStatter.UI
             this.pnlExtraControls.Controls.Add(this.cmbShowValues);
             this.pnlExtraControls.Controls.Add(this.lblShowVals);
             this.pnlExtraControls.Controls.Add(this.sliderEncDpsResolution);
-            this.pnlExtraControls.Location = new System.Drawing.Point(347, 625);
+            this.pnlExtraControls.Location = new System.Drawing.Point(367, 625);
             this.pnlExtraControls.Name = "pnlExtraControls";
             this.pnlExtraControls.Size = new System.Drawing.Size(466, 38);
             this.pnlExtraControls.TabIndex = 17;
@@ -207,7 +216,7 @@ namespace ActStatter.UI
             // lblAxis
             // 
             this.lblAxis.AutoSize = true;
-            this.lblAxis.Location = new System.Drawing.Point(351, 8);
+            this.lblAxis.Location = new System.Drawing.Point(369, 8);
             this.lblAxis.Name = "lblAxis";
             this.lblAxis.Size = new System.Drawing.Size(72, 13);
             this.lblAxis.TabIndex = 18;
@@ -220,7 +229,7 @@ namespace ActStatter.UI
             this.cmbYAxis.Items.AddRange(new object[] {
             "0",
             "Min Val"});
-            this.cmbYAxis.Location = new System.Drawing.Point(429, 4);
+            this.cmbYAxis.Location = new System.Drawing.Point(447, 4);
             this.cmbYAxis.Name = "cmbYAxis";
             this.cmbYAxis.Size = new System.Drawing.Size(58, 21);
             this.cmbYAxis.TabIndex = 19;
@@ -229,7 +238,7 @@ namespace ActStatter.UI
             // chkShowRange
             // 
             this.chkShowRange.AutoSize = true;
-            this.chkShowRange.Location = new System.Drawing.Point(624, 6);
+            this.chkShowRange.Location = new System.Drawing.Point(642, 6);
             this.chkShowRange.Name = "chkShowRange";
             this.chkShowRange.Size = new System.Drawing.Size(93, 17);
             this.chkShowRange.TabIndex = 20;
@@ -256,15 +265,6 @@ namespace ActStatter.UI
             this.btnSelectNone.Text = "None";
             this.btnSelectNone.UseVisualStyleBackColor = true;
             this.btnSelectNone.Click += new System.EventHandler(this.btnSelectNone_Click);
-            // 
-            // statGraph
-            // 
-            this.statGraph.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.statGraph.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.statGraph.Location = new System.Drawing.Point(5, 5);
-            this.statGraph.Name = "statGraph";
-            this.statGraph.Size = new System.Drawing.Size(627, 594);
-            this.statGraph.TabIndex = 1;
             // 
             // dgStats
             // 
@@ -296,7 +296,7 @@ namespace ActStatter.UI
             this.dgStats.ShowCellToolTips = false;
             this.dgStats.ShowEditingIcon = false;
             this.dgStats.ShowRowErrors = false;
-            this.dgStats.Size = new System.Drawing.Size(335, 200);
+            this.dgStats.Size = new System.Drawing.Size(355, 200);
             this.dgStats.TabIndex = 1;
             this.dgStats.DataBindingComplete += new System.Windows.Forms.DataGridViewBindingCompleteEventHandler(this.dgStats_DataBindingComplete);
             this.dgStats.SelectionChanged += new System.EventHandler(this.dgStats_SelectionChanged);
